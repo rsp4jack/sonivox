@@ -103,9 +103,6 @@ class SonivoxTest : public ::testing::TestWithParam<tuple</*fileName*/ string,
         ASSERT_EQ(playTimeMs, mAudioplayTimeMs)
                 << "Invalid audio play time found for file: " << mInputMediaFile;
 
-        result = EAS_GetFileType(mEASDataHandle, mEASStreamHandle, &mFileType);
-        ASSERT_EQ(result, EAS_SUCCESS) << "Failed to get the file type";
-
         EAS_I32 locationMs = -1;
         /* EAS_ParseMetaData resets the parser to the starting of file */
         result = EAS_GetLocation(mEASDataHandle, mEASStreamHandle, &locationMs);
@@ -166,7 +163,6 @@ class SonivoxTest : public ::testing::TestWithParam<tuple</*fileName*/ string,
     EAS_PCM *mAudioBuffer;
     EAS_I32 mPCMBufferSize;
     const S_EAS_LIB_CONFIG *mEASConfig;
-    EAS_I32 mFileType;
 };
 
 static int readAt(void *handle, void *buffer, int offset, int size) {
@@ -303,10 +299,6 @@ TEST_P(SonivoxTest, SeekTest) {
 }
 
 TEST_P(SonivoxTest, DecodePauseResumeTest) {
-
-    if (mFileType == EAS_FILE_XMF0  || mFileType == EAS_FILE_XMF1) {
-        return; /* Pause and Resume are not supported by the XMF parser */
-    }
 
     EAS_I32 seekPosition = mAudioplayTimeMs / 2;
     // go to middle of the audio
