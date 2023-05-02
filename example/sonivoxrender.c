@@ -35,6 +35,7 @@
 #define OPEN_FLAG O_LARGEFILE
 #endif
 
+const char *dls_path = NULL;
 EAS_I32 reverb_type = -1;
 EAS_I32 reverb_wet = 0;
 uint32_t mBase = 0;
@@ -43,7 +44,7 @@ int mFd = 0;
 
 int readFunction(void *handle, void *buffer, int offset, int size) {
     UNUSED(handle);
-	if (offset > mLength) { 
+	if (offset > mLength) {
 		offset = mLength;
 	}
     lseek(mFd, mBase + offset, SEEK_SET);
@@ -56,6 +57,24 @@ int readFunction(void *handle, void *buffer, int offset, int size) {
 int sizeFunction(void *handle) {
     UNUSED(handle);
     return mLength;
+}
+
+int dlsReadAt(void *handle, void *buf, int offset, int size) {
+    int ret;
+
+    ret = fseek((FILE *) handle, offset, SEEK_SET);
+    if (ret < 0) return 0;
+
+    return fread(buf, 1, size, (FILE *) handle);
+}
+
+int dlsSize(void *handle) {
+    int ret;
+
+    ret = fseek((FILE *) handle, 0, SEEK_END);
+    if (ret < 0) return ret;
+
+    return ftell((FILE *) handle);
 }
 
 int renderFile(char *fileName)
@@ -107,14 +126,36 @@ int renderFile(char *fileName)
         ok = EXIT_FAILURE;
         goto cleanup;
     }
-    
+
+    if (dls_path != NULL) {
+        EAS_FILE mDLSFile;
+
+        mDLSFile.handle = fopen(dls_path, "rb");
+        if (mDLSFile.handle == NULL) {
+            fprintf(stderr, "Failed to open %s. error: %s\n", dls_path, strerror(errno));
+            ok = EXIT_FAILURE;
+            goto cleanup;
+        }
+
+        mDLSFile.readAt = dlsReadAt;
+        mDLSFile.size = dlsSize;
+
+        result = EAS_LoadDLSCollection(mEASDataHandle, NULL, &mDLSFile);
+        fclose(mDLSFile.handle);
+        if (result != EAS_SUCCESS) {
+            fprintf(stderr, "Failed to load DLS file\n");
+            ok = EXIT_FAILURE;
+            goto cleanup;
+        }
+    }
+
     result = EAS_SetParameter(mEASDataHandle, EAS_MODULE_REVERB, EAS_PARAM_REVERB_WET, reverb_wet);
     if (result != EAS_SUCCESS) {
         fprintf(stderr, "Failed to set reverb wet amount");
         ok = EXIT_FAILURE;
         goto cleanup;
     }
-    
+
     EAS_BOOL sw = EAS_TRUE;
     EAS_I32 preset = reverb_type - 1;
     if ( preset >= EAS_PARAM_REVERB_LARGE_HALL && preset <= EAS_PARAM_REVERB_ROOM ) {
@@ -131,7 +172,7 @@ int renderFile(char *fileName)
         fprintf(stderr, "Failed to set reverb bypass");
         ok = EXIT_FAILURE;
         goto cleanup;
-    }    
+    }
 
     result = EAS_OpenFile(mEASDataHandle, &mEasFile, &mEASStreamHandle);
     if (result != EAS_SUCCESS) {
@@ -152,7 +193,7 @@ int renderFile(char *fileName)
         ok = EXIT_FAILURE;
         goto cleanup;
     }
-	
+
 	EAS_I32 playLength = 0;
 	result = EAS_ParseMetaData(mEASDataHandle, mEASStreamHandle, &playLength);
 	if (result != EAS_SUCCESS) {
@@ -166,7 +207,7 @@ int renderFile(char *fileName)
         ok = EXIT_FAILURE;
         goto cleanup;
 	}
-	
+
     mEASConfig = EAS_Config();
     if (mEASConfig == NULL) {
         fprintf(stderr, "Failed to get the library configuration\n");
@@ -203,17 +244,17 @@ int renderFile(char *fileName)
             ok = EXIT_FAILURE;
             break;
         }
-        
+
         if (count != mEASConfig->mixBufferSize) {
             fprintf(stderr, "Only %ld out of %ld frames rendered\n", count, mEASConfig->mixBufferSize);
             ok = EXIT_FAILURE;
             break;
         }
-        
+
         fwrite(mAudioBuffer, sizeof(EAS_PCM), mEASConfig->mixBufferSize * mEASConfig->numChannels, stdout);
         fflush(stdout);
     }
-    
+
 cleanup:
     if (mEASStreamHandle) {
         result = EAS_CloseFile(mEASDataHandle, mEASStreamHandle);
@@ -222,7 +263,7 @@ cleanup:
             ok = EXIT_FAILURE;
         }
     }
-    
+
     if (mEASDataHandle) {
         result = EAS_Shutdown(mEASDataHandle);
         if (result != EAS_SUCCESS) {
@@ -230,7 +271,7 @@ cleanup:
             ok = EXIT_FAILURE;
         }
     }
-    
+
     if (mFd > 0) {
         close(mFd);
     }
@@ -241,20 +282,23 @@ int main (int argc, char **argv)
 {
     int ok = EXIT_SUCCESS;
     int index, c;
-    
+
     opterr = 0;
-    
-    while ((c = getopt (argc, argv, "hr:w:")) != -1) {
+
+    while ((c = getopt (argc, argv, "hd:r:w:")) != -1) {
         switch (c)
         {
         case 'h':
-            fprintf (stderr, "Usage: %s [-h] [-r 0..4] [-w 0..32765] file.mid ...\n"\
+            fprintf (stderr, "Usage: %s [-h] [-d file.dls] [-r 0..4] [-w 0..32765] file.mid ...\n"\
                         "Render standard MIDI files into raw PCM audio.\n"\
                         "Options:\n"\
                         "\t-h\tthis help message\n"\
                         "\t-r n\treverb preset: 0=no, 1=large hall, 2=hall, 3=chamber, 4=room\n"\
                         "\t-w n\treverb wet: 0..32765\n", argv[0]);
             return EXIT_FAILURE;
+        case 'd':
+            dls_path = optarg;
+            break;
         case 'r':
             reverb_type = atoi(optarg);
             if (reverb_type < 0 || reverb_type > 4) {
