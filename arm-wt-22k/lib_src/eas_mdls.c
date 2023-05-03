@@ -136,10 +136,10 @@ extern double log10(double x);
 
 // #define _DEBUG_DLS
 
-#define DLS_MAX_WAVE_COUNT      1024
-#define DLS_MAX_ART_COUNT       2048
-#define DLS_MAX_REGION_COUNT    2048
-#define DLS_MAX_INST_COUNT      256
+#define DLS_MAX_WAVE_COUNT      2048
+#define DLS_MAX_ART_COUNT       4096
+#define DLS_MAX_REGION_COUNT    4096
+#define DLS_MAX_INST_COUNT      512
 #define MAX_DLS_WAVE_SIZE       (1024*1024)
 
 #ifndef EAS_U32_MAX

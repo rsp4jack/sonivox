@@ -947,7 +947,6 @@ EAS_PUBLIC EAS_RESULT EAS_SetHeaderSearchFlag (EAS_DATA_HANDLE pEASData, EAS_BOO
 */
 EAS_PUBLIC EAS_RESULT EAS_SetPlayMode (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStream, EAS_I32 playMode);
 
-#ifdef DLS_SYNTHESIZER
 /*----------------------------------------------------------------------------
  * EAS_LoadDLSCollection()
  *----------------------------------------------------------------------------
@@ -968,7 +967,6 @@ EAS_PUBLIC EAS_RESULT EAS_SetPlayMode (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStr
  *----------------------------------------------------------------------------
 */
 EAS_PUBLIC EAS_RESULT EAS_LoadDLSCollection (EAS_DATA_HANDLE pEASData, EAS_HANDLE streamHandle, EAS_FILE_LOCATOR locator);
-#endif
 
 /*----------------------------------------------------------------------------
  * EAS_SetFrameBuffer()
