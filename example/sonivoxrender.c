@@ -19,102 +19,95 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <inttypes.h>
 #include <string.h>
 #include <errno.h>
-#include <sys/stat.h>
 
 #include <eas.h>
 #include <eas_reverb.h>
 
-#define UNUSED(X) (void)X
-
-#ifdef __WIN32__
-#define OPEN_FLAG O_BINARY
-#else
-#define OPEN_FLAG O_LARGEFILE
-#endif
-
+const char *dls_path = NULL;
 EAS_I32 reverb_type = -1;
 EAS_I32 reverb_wet = 0;
-uint32_t mBase = 0;
-int64_t mLength = 0;
-int mFd = 0;
+EAS_DATA_HANDLE mEASDataHandle = NULL;
 
-int readFunction(void *handle, void *buffer, int offset, int size) {
-    UNUSED(handle);
-	if (offset > mLength) { 
-		offset = mLength;
-	}
-    lseek(mFd, mBase + offset, SEEK_SET);
-    if (offset + size > mLength) {
-        size = mLength - offset;
-    }
-	return read(mFd, buffer, size);
+int Read(void *handle, void *buf, int offset, int size) {
+    int ret;
+
+    ret = fseek((FILE *) handle, offset, SEEK_SET);
+    if (ret < 0) return 0;
+
+    return fread(buf, 1, size, (FILE *) handle);
 }
 
-int sizeFunction(void *handle) {
-    UNUSED(handle);
-    return mLength;
+int Size(void *handle) {
+    int ret;
+
+    ret = fseek((FILE *) handle, 0, SEEK_END);
+    if (ret < 0) return ret;
+
+    return ftell((FILE *) handle);
 }
 
-int renderFile(char *fileName)
+void shutdownLibrary(void)
 {
-    EAS_DATA_HANDLE mEASDataHandle = NULL;
-    EAS_HANDLE mEASStreamHandle = NULL;
-    EAS_FILE mEasFile;
-    EAS_PCM *mAudioBuffer = NULL;
-    EAS_I32 mPCMBufferSize = 0;
-    const S_EAS_LIB_CONFIG *mEASConfig;
+    if (mEASDataHandle) {
+        EAS_RESULT result = EAS_Shutdown(mEASDataHandle);
+        if (result != EAS_SUCCESS) {
+            fprintf(stderr, "Failed to deallocate the resources for synthesizer library\n");
+        }
+    }
+}
 
-    struct stat statbuf;
+int initializeLibrary(void)
+{
     int ok = EXIT_SUCCESS;
-    int err = 0;
 
 #ifdef __WIN32__
 	setmode(fileno(stdout), O_BINARY);
 #endif
 
-    mFd = open(fileName, O_RDONLY | OPEN_FLAG);
-    if (mFd < 0) {
-        fprintf(stderr, "Failed to open %s. error: %s\n", fileName, strerror(errno));
-        ok = EXIT_FAILURE;
-        return ok;
-    }
-
-    err = stat(fileName, &statbuf);
-    if (err < 0) {
-        fprintf(stderr, "Failed to stat %s. error: %s\n", fileName, strerror(errno));
-        ok = EXIT_FAILURE;
-        return ok;
-    }
-
-    mBase = 0;
-    mLength = statbuf.st_size;
-    mEasFile.handle = fileName;
-    mEasFile.readAt = readFunction;
-    mEasFile.size = sizeFunction;
-
     EAS_RESULT result = EAS_Init(&mEASDataHandle);
     if (result != EAS_SUCCESS) {
         fprintf(stderr, "Failed to initialize synthesizer library\n");
         ok = EXIT_FAILURE;
-        goto cleanup;
+        return ok;
     }
 
     if (mEASDataHandle == NULL) {
         fprintf(stderr, "Failed to initialize EAS data handle\n");
         ok = EXIT_FAILURE;
-        goto cleanup;
+        return ok;
     }
-    
+
+    if (dls_path != NULL) {
+        EAS_FILE mDLSFile;
+
+        mDLSFile.handle = fopen(dls_path, "rb");
+        if (mDLSFile.handle == NULL) {
+            fprintf(stderr, "Failed to open %s. error: %s\n", dls_path, strerror(errno));
+            ok = EXIT_FAILURE;
+            goto cleanup;
+        }
+
+        mDLSFile.readAt = Read;
+        mDLSFile.size = Size;
+
+        result = EAS_LoadDLSCollection(mEASDataHandle, NULL, &mDLSFile);
+        fclose(mDLSFile.handle);
+        if (result != EAS_SUCCESS) {
+            fprintf(stderr, "Failed to load DLS file\n");
+            ok = EXIT_FAILURE;
+            goto cleanup;
+        }
+    }
+
     result = EAS_SetParameter(mEASDataHandle, EAS_MODULE_REVERB, EAS_PARAM_REVERB_WET, reverb_wet);
     if (result != EAS_SUCCESS) {
         fprintf(stderr, "Failed to set reverb wet amount");
         ok = EXIT_FAILURE;
         goto cleanup;
     }
-    
+
     EAS_BOOL sw = EAS_TRUE;
     EAS_I32 preset = reverb_type - 1;
     if ( preset >= EAS_PARAM_REVERB_LARGE_HALL && preset <= EAS_PARAM_REVERB_ROOM ) {
@@ -131,9 +124,37 @@ int renderFile(char *fileName)
         fprintf(stderr, "Failed to set reverb bypass");
         ok = EXIT_FAILURE;
         goto cleanup;
-    }    
+    }
 
-    result = EAS_OpenFile(mEASDataHandle, &mEasFile, &mEASStreamHandle);
+    return ok;
+
+cleanup:
+    shutdownLibrary();
+
+    return ok;
+}
+
+int renderFile(const char *fileName)
+{
+    EAS_HANDLE mEASStreamHandle = NULL;
+    EAS_FILE mEasFile;
+    EAS_PCM *mAudioBuffer = NULL;
+    EAS_I32 mPCMBufferSize = 0;
+    const S_EAS_LIB_CONFIG *mEASConfig;
+
+    int ok = EXIT_SUCCESS;
+
+    mEasFile.handle = fopen(fileName, "rb");
+    if (mEasFile.handle == NULL) {
+        fprintf(stderr, "Failed to open %s. error: %s\n", fileName, strerror(errno));
+        ok = EXIT_FAILURE;
+        return ok;
+    }
+
+    mEasFile.readAt = Read;
+    mEasFile.size = Size;
+
+    EAS_RESULT result = EAS_OpenFile(mEASDataHandle, &mEasFile, &mEASStreamHandle);
     if (result != EAS_SUCCESS) {
         fprintf(stderr, "Failed to open file\n");
         ok = EXIT_FAILURE;
@@ -152,7 +173,7 @@ int renderFile(char *fileName)
         ok = EXIT_FAILURE;
         goto cleanup;
     }
-	
+
 	EAS_I32 playLength = 0;
 	result = EAS_ParseMetaData(mEASDataHandle, mEASStreamHandle, &playLength);
 	if (result != EAS_SUCCESS) {
@@ -166,7 +187,7 @@ int renderFile(char *fileName)
         ok = EXIT_FAILURE;
         goto cleanup;
 	}
-	
+
     mEASConfig = EAS_Config();
     if (mEASConfig == NULL) {
         fprintf(stderr, "Failed to get the library configuration\n");
@@ -203,17 +224,17 @@ int renderFile(char *fileName)
             ok = EXIT_FAILURE;
             break;
         }
-        
+
         if (count != mEASConfig->mixBufferSize) {
             fprintf(stderr, "Only %ld out of %ld frames rendered\n", count, mEASConfig->mixBufferSize);
             ok = EXIT_FAILURE;
             break;
         }
-        
+
         fwrite(mAudioBuffer, sizeof(EAS_PCM), mEASConfig->mixBufferSize * mEASConfig->numChannels, stdout);
         fflush(stdout);
     }
-    
+
 cleanup:
     if (mEASStreamHandle) {
         result = EAS_CloseFile(mEASDataHandle, mEASStreamHandle);
@@ -222,17 +243,9 @@ cleanup:
             ok = EXIT_FAILURE;
         }
     }
-    
-    if (mEASDataHandle) {
-        result = EAS_Shutdown(mEASDataHandle);
-        if (result != EAS_SUCCESS) {
-            fprintf(stderr, "Failed to deallocate the resources for synthesizer library\n");
-            ok = EXIT_FAILURE;
-        }
-    }
-    
-    if (mFd > 0) {
-        close(mFd);
+
+    if (mEasFile.handle != NULL) {
+        fclose(mEasFile.handle);
     }
     return ok;
 }
@@ -241,20 +254,24 @@ int main (int argc, char **argv)
 {
     int ok = EXIT_SUCCESS;
     int index, c;
-    
+
     opterr = 0;
-    
-    while ((c = getopt (argc, argv, "hr:w:")) != -1) {
+
+    while ((c = getopt (argc, argv, "hd:r:w:")) != -1) {
         switch (c)
         {
         case 'h':
-            fprintf (stderr, "Usage: %s [-h] [-r 0..4] [-w 0..32765] file.mid ...\n"\
+            fprintf (stderr, "Usage: %s [-h] [-d file.dls] [-r 0..4] [-w 0..32765] file.mid ...\n"\
                         "Render standard MIDI files into raw PCM audio.\n"\
                         "Options:\n"\
                         "\t-h\tthis help message\n"\
+                        "\t-d file.dls\tDLS soundfont\n"\
                         "\t-r n\treverb preset: 0=no, 1=large hall, 2=hall, 3=chamber, 4=room\n"\
                         "\t-w n\treverb wet: 0..32765\n", argv[0]);
             return EXIT_FAILURE;
+        case 'd':
+            dls_path = optarg;
+            break;
         case 'r':
             reverb_type = atoi(optarg);
             if (reverb_type < 0 || reverb_type > 4) {
@@ -275,12 +292,19 @@ int main (int argc, char **argv)
         }
     }
 
+    ok = initializeLibrary();
+    if (ok != EXIT_SUCCESS) {
+        return ok;
+    }
+
     for (index = optind; index < argc; index++) {
         ok = renderFile(argv[index]);
         if (ok != EXIT_SUCCESS) {
             break;
         }
     }
+
+    shutdownLibrary();
 
     return ok;
 }
