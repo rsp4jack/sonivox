@@ -20,7 +20,6 @@ project( sonivoxrender LANGUAGES C )
 # Alternative 1: Using CMake only and sonivox installed:
 find_package ( sonivox CONFIG REQUIRED )
 add_executable ( sonivoxrender sonivoxrender.c )
-target_compile_definitions( sonivoxrender PRIVATE _LARGEFILE64_SOURCE )
 target_link_libraries ( sonivoxrender sonivox::sonivox-static )
 
 # Alternative 2: Using pkg-config and sonivox installed:
