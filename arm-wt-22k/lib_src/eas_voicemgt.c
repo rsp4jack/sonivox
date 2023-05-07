@@ -2655,6 +2655,94 @@ static EAS_RESULT VMFindDLSProgram (const S_DLS *pDLS, EAS_U32 bank, EAS_U8 prog
         }
     }
 
+    /* also search bank 0 when default bank (MSB) is used */
+    if (((bank & 0xFF00) == DEFAULT_MELODY_BANK_NUMBER) || ((bank & 0xFF00) == DEFAULT_RHYTHM_BANK_NUMBER))
+    {
+        /* establish locale */
+        locale = ((bank & 0x100FF) << 8) | programNum;
+
+        /* search for program */
+        for (i = 0, p = pDLS->pDLSPrograms; i < pDLS->numDLSPrograms; i++, p++)
+        {
+            if (p->locale == locale)
+            {
+                *pRegionIndex = p->regionIndex;
+                return EAS_SUCCESS;
+            }
+        }
+    }
+
+    /* fall back to default bank */
+    if ((bank != DEFAULT_MELODY_BANK_NUMBER) && (bank != (0x10000 | DEFAULT_RHYTHM_BANK_NUMBER)))
+    {
+        /* establish locale */
+        if (bank & 0x10000)
+        {
+            locale = ((0x10000 | DEFAULT_RHYTHM_BANK_NUMBER) << 8) | programNum;
+        }
+        else
+        {
+            locale = (DEFAULT_MELODY_BANK_NUMBER << 8) | programNum;
+        }
+
+        /* search for program */
+        for (i = 0, p = pDLS->pDLSPrograms; i < pDLS->numDLSPrograms; i++, p++)
+        {
+            if (p->locale == locale)
+            {
+                *pRegionIndex = p->regionIndex;
+                return EAS_SUCCESS;
+            }
+        }
+
+        /* also search bank 0 */
+
+        /* establish locale */
+        locale = ((bank & 0x10000) << 8) | programNum;
+
+        /* search for program */
+        for (i = 0, p = pDLS->pDLSPrograms; i < pDLS->numDLSPrograms; i++, p++)
+        {
+            if (p->locale == locale)
+            {
+                *pRegionIndex = p->regionIndex;
+                return EAS_SUCCESS;
+            }
+        }
+    }
+
+    /* switch to program 0 in the default bank, when searching for drum instrument */
+    if ((bank & 0x10000) && programNum)
+    {
+        /* establish locale */
+        locale = ((0x10000 | DEFAULT_RHYTHM_BANK_NUMBER) << 8);
+
+        /* search for program */
+        for (i = 0, p = pDLS->pDLSPrograms; i < pDLS->numDLSPrograms; i++, p++)
+        {
+            if (p->locale == locale)
+            {
+                *pRegionIndex = p->regionIndex;
+                return EAS_SUCCESS;
+            }
+        }
+
+        /* also search bank 0 */
+
+        /* establish locale */
+        locale = (0x10000 << 8);
+
+        /* search for program */
+        for (i = 0, p = pDLS->pDLSPrograms; i < pDLS->numDLSPrograms; i++, p++)
+        {
+            if (p->locale == locale)
+            {
+                *pRegionIndex = p->regionIndex;
+                return EAS_SUCCESS;
+            }
+        }
+    }
+
     return EAS_FAILURE;
 }
 #endif
@@ -2729,7 +2817,7 @@ void VMProgramChange (S_VOICE_MGR *pVoiceMgr, S_SYNTH *pSynth, EAS_U8 channel, E
 
 #ifdef DLS_SYNTHESIZER
     /* first check for DLS program that may overlay the internal instrument */
-    if (VMFindDLSProgram(pSynth->pDLS, bank, program, &regionIndex) != EAS_SUCCESS)
+    if (VMFindDLSProgram(pSynth->pDLS, bank | ((pChannel->channelFlags & CHANNEL_FLAG_RHYTHM_CHANNEL) ? 0x10000 : 0), program, &regionIndex) != EAS_SUCCESS)
 #endif
 
     /* braces to support 'if' clause above */
