@@ -1,5 +1,5 @@
 #[=========================================================================[
-  Copyright (c) 2022 Pedro López-Cabanillas
+  Copyright (c) 2022-2023 Pedro López-Cabanillas
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
 
 cmake_minimum_required(VERSION 3.14)
 
-project( sonivox 
+project( sonivox
     LANGUAGES C CXX
-    VERSION 3.6.11.0
+    VERSION 3.6.12.0
 )
 
 # GoogleTest requires at least C++14
@@ -27,6 +27,7 @@ set(CMAKE_CXX_STANDARD 14)
 option(BUILD_SONIVOX_STATIC "Build the static library" TRUE)
 option(BUILD_SONIVOX_SHARED "Build the shared library" TRUE)
 option(BUILD_TESTING "Build the unit tests" TRUE)
+option(CMAKE_POSITION_INDEPENDENT_CODE "Whether to create position-independent targets" TRUE)
 
 include(GNUInstallDirs)
 
@@ -55,54 +56,54 @@ else()
 endif()
 
 list(APPEND SOURCES
-  arm-wt-22k/host_src/eas_config.c 
-  arm-wt-22k/host_src/eas_hostmm.c 
-#arm-wt-22k/host_src/eas_main.c 
+  arm-wt-22k/host_src/eas_config.c
+  arm-wt-22k/host_src/eas_hostmm.c
+#arm-wt-22k/host_src/eas_main.c
   arm-wt-22k/host_src/eas_report.c
 #arm-wt-22k/host_src/eas_wave.c
   arm-wt-22k/lib_src/eas_chorus.c
   arm-wt-22k/lib_src/eas_chorusdata.c
-  arm-wt-22k/lib_src/eas_data.c 
-  arm-wt-22k/lib_src/eas_dlssynth.c 
-  arm-wt-22k/lib_src/eas_flog.c 
-#arm-wt-22k/lib_src/eas_ima_tables.c 
-#arm-wt-22k/lib_src/eas_imaadpcm.c 
-#arm-wt-22k/lib_src/eas_imelody.c 
-#arm-wt-22k/lib_src/eas_imelodydata.c 
-  arm-wt-22k/lib_src/eas_math.c 
-  arm-wt-22k/lib_src/eas_mdls.c 
-  arm-wt-22k/lib_src/eas_midi.c 
-  arm-wt-22k/lib_src/eas_mididata.c 
+  arm-wt-22k/lib_src/eas_data.c
+  arm-wt-22k/lib_src/eas_dlssynth.c
+  arm-wt-22k/lib_src/eas_flog.c
+#arm-wt-22k/lib_src/eas_ima_tables.c
+#arm-wt-22k/lib_src/eas_imaadpcm.c
+#arm-wt-22k/lib_src/eas_imelody.c
+#arm-wt-22k/lib_src/eas_imelodydata.c
+  arm-wt-22k/lib_src/eas_math.c
+  arm-wt-22k/lib_src/eas_mdls.c
+  arm-wt-22k/lib_src/eas_midi.c
+  arm-wt-22k/lib_src/eas_mididata.c
   arm-wt-22k/lib_src/eas_mixbuf.c
   arm-wt-22k/lib_src/eas_mixer.c
-#arm-wt-22k/lib_src/eas_ota.c 
-#arm-wt-22k/lib_src/eas_otadata.c 
-  arm-wt-22k/lib_src/eas_pan.c 
-  arm-wt-22k/lib_src/eas_pcm.c 
-  arm-wt-22k/lib_src/eas_pcmdata.c 
-  arm-wt-22k/lib_src/eas_public.c 
-  arm-wt-22k/lib_src/eas_reverb.c 
-  arm-wt-22k/lib_src/eas_reverbdata.c 
-#arm-wt-22k/lib_src/eas_rtttl.c 
-#arm-wt-22k/lib_src/eas_rtttldata.c 
-  arm-wt-22k/lib_src/eas_smf.c 
-  arm-wt-22k/lib_src/eas_smfdata.c 
-  arm-wt-22k/lib_src/eas_tcdata.c 
-  arm-wt-22k/lib_src/eas_tonecontrol.c 
-  arm-wt-22k/lib_src/eas_voicemgt.c 
-#arm-wt-22k/lib_src/eas_wavefile.c 
-#arm-wt-22k/lib_src/eas_wavefiledata.c 
-  arm-wt-22k/lib_src/eas_wtengine.c 
-  arm-wt-22k/lib_src/eas_wtsynth.c 
-#arm-wt-22k/lib_src/eas_xmf.c 
-#arm-wt-22k/lib_src/eas_xmfdata.c 
-#arm-wt-22k/lib_src/jet.c 
-  arm-wt-22k/lib_src/wt_22khz.c 
+#arm-wt-22k/lib_src/eas_ota.c
+#arm-wt-22k/lib_src/eas_otadata.c
+  arm-wt-22k/lib_src/eas_pan.c
+  arm-wt-22k/lib_src/eas_pcm.c
+  arm-wt-22k/lib_src/eas_pcmdata.c
+  arm-wt-22k/lib_src/eas_public.c
+  arm-wt-22k/lib_src/eas_reverb.c
+  arm-wt-22k/lib_src/eas_reverbdata.c
+#arm-wt-22k/lib_src/eas_rtttl.c
+#arm-wt-22k/lib_src/eas_rtttldata.c
+  arm-wt-22k/lib_src/eas_smf.c
+  arm-wt-22k/lib_src/eas_smfdata.c
+  arm-wt-22k/lib_src/eas_tcdata.c
+  arm-wt-22k/lib_src/eas_tonecontrol.c
+  arm-wt-22k/lib_src/eas_voicemgt.c
+#arm-wt-22k/lib_src/eas_wavefile.c
+#arm-wt-22k/lib_src/eas_wavefiledata.c
+  arm-wt-22k/lib_src/eas_wtengine.c
+  arm-wt-22k/lib_src/eas_wtsynth.c
+#arm-wt-22k/lib_src/eas_xmf.c
+#arm-wt-22k/lib_src/eas_xmfdata.c
+#arm-wt-22k/lib_src/jet.c
+  arm-wt-22k/lib_src/wt_22khz.c
 )
 
 configure_file(arm-wt-22k/host_src/eas.cmake libsonivox/eas.h @ONLY)
 
-list(APPEND HEADERS 
+list(APPEND HEADERS
     ${PROJECT_BINARY_DIR}/libsonivox/eas.h
     arm-wt-22k/host_src/eas_chorus.h
     arm-wt-22k/host_src/eas_reverb.h
@@ -110,7 +111,7 @@ list(APPEND HEADERS
 #arm-wt-22k/host_src/jet.h
 )
 
-add_library( sonivox-objects OBJECT ${SOURCES} )
+add_library( sonivox-objects OBJECT ${SOURCES} ${HEADERS} )
 
 target_compile_definitions( sonivox-objects PRIVATE
   UNIFIED_DEBUG_MESSAGES
@@ -136,8 +137,6 @@ target_include_directories( sonivox-objects PRIVATE
     arm-wt-22k/lib_src
     fakes
 )
-
-set_target_properties( sonivox-objects PROPERTIES POSITION_INDEPENDENT_CODE TRUE )
 
 if (CMAKE_COMPILER_IS_GNUCC)
     target_compile_options( sonivox-objects PRIVATE
@@ -188,12 +187,12 @@ endif()
 
 if (BUILD_SONIVOX_STATIC)
     configure_file(sonivox-static.pc.in ${PROJECT_BINARY_DIR}/sonivox-static.pc @ONLY)
-    install( FILES ${CMAKE_CURRENT_BINARY_DIR}/sonivox-static.pc 
+    install( FILES ${CMAKE_CURRENT_BINARY_DIR}/sonivox-static.pc
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig )
 endif()
 if (BUILD_SONIVOX_SHARED)
     configure_file(sonivox.pc.in ${PROJECT_BINARY_DIR}/sonivox.pc @ONLY)
-    install( FILES ${CMAKE_CURRENT_BINARY_DIR}/sonivox.pc 
+    install( FILES ${CMAKE_CURRENT_BINARY_DIR}/sonivox.pc
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig )
 endif()
 
@@ -201,39 +200,39 @@ install( TARGETS ${SONIVOX_TARGETS}
     EXPORT sonivox-targets
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} 
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/sonivox
 )
 
 install( EXPORT sonivox-targets
-	FILE ${PROJECT_NAME}-targets.cmake
-	NAMESPACE ${PROJECT_NAME}::
-	DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+        FILE ${PROJECT_NAME}-targets.cmake
+        NAMESPACE ${PROJECT_NAME}::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
 
 export( EXPORT sonivox-targets
-	FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-targets.cmake"
-	NAMESPACE ${PROJECT_NAME}::
+        FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-targets.cmake"
+        NAMESPACE ${PROJECT_NAME}::
 )
 
 include( CMakePackageConfigHelpers )
 
 write_basic_package_version_file(
-	${PROJECT_NAME}-config-version.cmake
-	VERSION ${PROJECT_VERSION}
-	COMPATIBILITY AnyNewerVersion
+        ${PROJECT_NAME}-config-version.cmake
+        VERSION ${PROJECT_VERSION}
+        COMPATIBILITY AnyNewerVersion
 )
 
 configure_package_config_file(
-	${PROJECT_NAME}-config.cmake.in
-	${PROJECT_NAME}-config.cmake
-	INSTALL_DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
+        ${PROJECT_NAME}-config.cmake.in
+        ${PROJECT_NAME}-config.cmake
+        INSTALL_DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 install( FILES
     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
-	DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
 
 # Unit testing
@@ -250,11 +249,20 @@ if (BUILD_TESTING)
         fakes
     )
 
-    target_link_libraries( SonivoxTest
+    target_link_libraries( SonivoxTest PRIVATE
       GTest::gtest_main
-      sonivox
     )
 
+    if (BUILD_SONIVOX_STATIC)
+        target_link_libraries( SonivoxTest PRIVATE
+            sonivox-static
+        )
+    elseif (BUILD_SONIVOX_SHARED)
+        target_link_libraries( SonivoxTest PRIVATE
+            sonivox
+        )
+    endif()
+
     include( GoogleTest )
-    gtest_discover_tests( SonivoxTest EXTRA_ARGS "-P${PROJECT_SOURCE_DIR}/test/res/" DISCOVERY_TIMEOUT 300 ) 
+    gtest_discover_tests( SonivoxTest EXTRA_ARGS "-P${PROJECT_SOURCE_DIR}/test/res/" DISCOVERY_TIMEOUT 300 )
 endif()

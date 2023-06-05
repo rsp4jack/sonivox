@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Pedro López-Cabanillas
+ * Copyright (c) 2022-2023 Pedro López-Cabanillas
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -264,10 +264,10 @@ int main (int argc, char **argv)
             fprintf (stderr, "Usage: %s [-h] [-d file.dls] [-r 0..4] [-w 0..32765] file.mid ...\n"\
                         "Render standard MIDI files into raw PCM audio.\n"\
                         "Options:\n"\
-                        "\t-h\tthis help message\n"\
-                        "\t-d file.dls\tDLS soundfont\n"\
-                        "\t-r n\treverb preset: 0=no, 1=large hall, 2=hall, 3=chamber, 4=room\n"\
-                        "\t-w n\treverb wet: 0..32765\n", argv[0]);
+                        "\t-h\t\tthis help message.\n"\
+                        "\t-d file.dls\tDLS soundfont.\n"\
+                        "\t-r n\t\treverb preset: 0=no, 1=large hall, 2=hall, 3=chamber, 4=room.\n"\
+                        "\t-w n\t\treverb wet: 0..32765.\n", argv[0]);
             return EXIT_FAILURE;
         case 'd':
             dls_path = optarg;
