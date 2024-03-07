@@ -38,12 +38,15 @@ jobs:
       
     - name: Install
       run: cmake --install ${{github.workspace}}/build
-    
+
+    - name: Create Archive
+      run: tar cvf SonivoxV3.tar ${{env.INSTALL_LOCATION}}
+      
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: SonivoxV3
-        path: ${{env.INSTALL_LOCATION}}
+        path: SonivoxV3.tar
         retention-days: 90
         overwrite: true
     
