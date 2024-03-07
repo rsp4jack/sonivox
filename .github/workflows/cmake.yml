@@ -9,7 +9,7 @@ on:
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: RelWithDebInfo
-  INSTALL_LOCATION: ${{github.workspace}}/Sonivox_install
+  INSTALL_LOCATION: ${{github.workspace}}/SonivoxV3
 
 jobs:
   build:
@@ -40,7 +40,9 @@ jobs:
       run: cmake --install ${{github.workspace}}/build
 
     - name: Create Archive
-      run: tar cvf SonivoxV3.tar ${{env.INSTALL_LOCATION}}
+      run: |
+        cd ${{github.workspace}}
+        tar cvf SonivoxV3.tar SonivoxV3
       
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
@@ -49,4 +51,3 @@ jobs:
         path: SonivoxV3.tar
         retention-days: 90
         overwrite: true
-    
