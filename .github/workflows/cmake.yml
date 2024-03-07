@@ -2,13 +2,14 @@ name: Linux Build and Test
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "devel" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "devel" ]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  BUILD_TYPE: Release
+  BUILD_TYPE: RelWithDebInfo
+  INSTALL_LOCATION: ${{github.workspace}}/Sonivox_install
 
 jobs:
   build:
@@ -18,12 +19,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=${{env.INSTALL_LOCATION}}
 
     - name: Build
       # Build your program with the given configuration
@@ -35,3 +36,14 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest -C ${{env.BUILD_TYPE}}
       
+    - name: Install
+      run: cmake --install ${{github.workspace}}/build
+    
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: SonivoxV3
+        path: ${{env.INSTALL_LOCATION}}
+        retention-days: 90
+        overwrite: true
+    
