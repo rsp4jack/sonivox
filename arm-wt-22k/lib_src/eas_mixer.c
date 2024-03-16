@@ -263,8 +263,11 @@ void EAS_MixEnginePost (S_EAS_DATA *pEASData, EAS_I32 numSamples)
  *
  *----------------------------------------------------------------------------
 */
-void SynthMasterGain (long *pInputBuffer, EAS_PCM *pOutputBuffer, EAS_U16 nGain, EAS_U16 numSamples) {
-
+void SynthMasterGain(EAS_I32 *pInputBuffer,
+                     EAS_PCM *pOutputBuffer,
+                     EAS_U16 nGain,
+                     EAS_U16 numSamples)
+{
     /* loop through the buffer */
     while (numSamples) {
         long s;
