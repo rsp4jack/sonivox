@@ -4,6 +4,7 @@
 #define ALOGV(...)
 
 #if defined(__APPLE__) && defined (__APPLE_CC__)
+#include <fcntl.h>
 #include <sys/types.h>
 typedef __int64_t off64_t;
 #endif
@@ -13,5 +14,5 @@ typedef __int64_t off64_t;
 #elif defined(__linux__)
 #define OPEN_FLAG O_LARGEFILE
 #else
-#define OPEN_FLAG
+#define OPEN_FLAG O_CREAT
 #endif

@@ -70,6 +70,6 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: SonivoxV3-${{matrix.sys}}
-        path: ${{env.INSTALL_LOCATION}}
+        path: ${{env.INSTALL_LOCATION}}/**/*
         retention-days: 90
         overwrite: true
