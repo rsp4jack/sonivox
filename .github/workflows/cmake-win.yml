@@ -67,7 +67,7 @@ jobs:
       run: cmake --install build
 
     - name: '${{ matrix.icon }} Debug installed files'
-      run: dir /s ${{env.INSTALL_LOCATION}}
+      run: dir ${{env.INSTALL_LOCATION}} /s
 
     - name: '${{ matrix.icon }} Upload Artifacts'
       uses: actions/upload-artifact@v4
