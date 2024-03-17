@@ -29,7 +29,7 @@
  *----------------------------------------------------------------------------
 */
 
-#ifndef EAS_TFDATA_H
+#ifndef EAS_TCDATA_H
 #define EAS_TCDATA_H
 
 #include "eas_data.h"

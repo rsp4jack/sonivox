@@ -40,107 +40,115 @@ class SonivoxTest : public ::testing::TestWithParam<tuple</*fileName*/ string,
                                                           /*totalChannels*/ uint32_t,
                                                           /*sampleRateHz*/ uint32_t>> {
   public:
-    SonivoxTest()
-        : mFd(-1),
-          mInputFp(nullptr),
-          mEASDataHandle(nullptr),
-          mEASStreamHandle(nullptr),
-          mPCMBuffer(nullptr),
-          mAudioBuffer(nullptr),
-          mEASConfig(nullptr) {}
+      SonivoxTest()
+          : mFd(-1)
+          , mInputFp(nullptr)
+          , mEASDataHandle(nullptr)
+          , mEASStreamHandle(nullptr)
+          , mPCMBuffer(nullptr)
+          , mAudioBuffer(nullptr)
+          , mEASConfig(nullptr)
+      {}
 
-    ~SonivoxTest() {
-        if (mInputFp) fclose(mInputFp);
-        if (mFd >= 0) close(mFd);
-        if (mPCMBuffer) {
-            delete[] mPCMBuffer;
-            mPCMBuffer = nullptr;
-        }
-        if (mAudioBuffer) {
-            delete[] mAudioBuffer;
-            mAudioBuffer = nullptr;
-        }
-        if (gEnv->cleanUp()) remove(gEnv->OUTPUT_FILE);
-    }
+      ~SonivoxTest()
+      {
+          if (mInputFp)
+              fclose(mInputFp);
+          if (mFd >= 0)
+              close(mFd);
+          if (mPCMBuffer) {
+              delete[] mPCMBuffer;
+              mPCMBuffer = nullptr;
+          }
+          if (mAudioBuffer) {
+              delete[] mAudioBuffer;
+              mAudioBuffer = nullptr;
+          }
+          if (gEnv->cleanUp())
+              remove(gEnv->OUTPUT_FILE);
+      }
 
-    virtual void SetUp() override {
-        tuple<string, uint32_t, uint32_t, uint32_t> params = GetParam();
-        mInputMediaFile = gEnv->getRes() + get<0>(params);
-        mAudioplayTimeMs = get<1>(params);
-        mTotalAudioChannels = get<2>(params);
-        mAudioSampleRate = get<3>(params);
+      virtual void SetUp() override
+      {
+          tuple<string, uint32_t, uint32_t, uint32_t> params = GetParam();
+          mInputMediaFile = gEnv->getRes() + get<0>(params);
+          mAudioplayTimeMs = get<1>(params);
+          mTotalAudioChannels = get<2>(params);
+          mAudioSampleRate = get<3>(params);
 
-        mFd = open(mInputMediaFile.c_str(), O_RDONLY | OPEN_FLAG);
-        ASSERT_GE(mFd, 0) << "Failed to get the file descriptor for file: " << mInputMediaFile;
+          mFd = open(mInputMediaFile.c_str(), O_RDONLY | OPEN_FLAG);
+          ASSERT_GE(mFd, 0) << "Failed to get the file descriptor for file: " << mInputMediaFile;
 
-        struct stat buf;
-        int8_t err = stat(mInputMediaFile.c_str(), &buf);
-        ASSERT_EQ(err, 0) << "Failed to get information for file: " << mInputMediaFile;
+          struct stat buf;
+          int8_t err = stat(mInputMediaFile.c_str(), &buf);
+          ASSERT_EQ(err, 0) << "Failed to get information for file: " << mInputMediaFile;
 
-        mBase = 0;
-        mLength = buf.st_size;
-        mEasFile.handle = this;
-        mEasFile.readAt = ::readAt;
-        mEasFile.size = ::getSize;
+          mBase = 0;
+          mLength = buf.st_size;
+          mEasFile.handle = this;
+          mEasFile.readAt = ::readAt;
+          mEasFile.size = ::getSize;
 
-        EAS_RESULT result = EAS_Init(&mEASDataHandle);
-        ASSERT_EQ(result, EAS_SUCCESS) << "Failed to initialize synthesizer library";
+          EAS_RESULT result = EAS_Init(&mEASDataHandle);
+          ASSERT_EQ(result, EAS_SUCCESS) << "Failed to initialize synthesizer library";
 
-        ASSERT_NE(mEASDataHandle, nullptr) << "Failed to initialize EAS data handle";
+          ASSERT_NE(mEASDataHandle, nullptr) << "Failed to initialize EAS data handle";
 
-        result = EAS_OpenFile(mEASDataHandle, &mEasFile, &mEASStreamHandle);
-        ASSERT_EQ(result, EAS_SUCCESS) << "Failed to open file";
+          result = EAS_OpenFile(mEASDataHandle, &mEasFile, &mEASStreamHandle);
+          ASSERT_EQ(result, EAS_SUCCESS) << "Failed to open file";
 
-        ASSERT_NE(mEASStreamHandle, nullptr) << "Failed to initialize EAS stream handle";
+          ASSERT_NE(mEASStreamHandle, nullptr) << "Failed to initialize EAS stream handle";
 
-        result = EAS_Prepare(mEASDataHandle, mEASStreamHandle);
-        ASSERT_EQ(result, EAS_SUCCESS) << "Failed to prepare EAS data and stream handles";
+          result = EAS_Prepare(mEASDataHandle, mEASStreamHandle);
+          ASSERT_EQ(result, EAS_SUCCESS) << "Failed to prepare EAS data and stream handles";
 
-        EAS_I32 playTimeMs;
-        result = EAS_ParseMetaData(mEASDataHandle, mEASStreamHandle, &playTimeMs);
-        ASSERT_EQ(result, EAS_SUCCESS) << "Failed to parse meta data";
+          EAS_I32 playTimeMs;
+          result = EAS_ParseMetaData(mEASDataHandle, mEASStreamHandle, &playTimeMs);
+          ASSERT_EQ(result, EAS_SUCCESS) << "Failed to parse meta data";
 
-        ASSERT_EQ(playTimeMs, mAudioplayTimeMs)
-                << "Invalid audio play time found for file: " << mInputMediaFile;
+          ASSERT_EQ(playTimeMs, mAudioplayTimeMs)
+              << "Invalid audio play time found for file: " << mInputMediaFile;
 
-        EAS_I32 locationMs = -1;
-        /* EAS_ParseMetaData resets the parser to the starting of file */
-        result = EAS_GetLocation(mEASDataHandle, mEASStreamHandle, &locationMs);
-        ASSERT_EQ(result, EAS_SUCCESS) << "Failed to get the location after parsing meta data";
+          EAS_I32 locationMs = -1;
+          /* EAS_ParseMetaData resets the parser to the starting of file */
+          result = EAS_GetLocation(mEASDataHandle, mEASStreamHandle, &locationMs);
+          ASSERT_EQ(result, EAS_SUCCESS) << "Failed to get the location after parsing meta data";
 
-        ASSERT_EQ(locationMs, 0) << "Expected position: 0, found: " << locationMs;
+          ASSERT_EQ(locationMs, 0) << "Expected position: 0, found: " << locationMs;
 
-        mEASConfig = EAS_Config();
-        ASSERT_NE(mEASConfig, nullptr) << "Failed to configure the library";
+          mEASConfig = EAS_Config();
+          ASSERT_NE(mEASConfig, nullptr) << "Failed to configure the library";
 
-        ASSERT_GT(mEASConfig->mixBufferSize, 0) << "Mix buffer size must be greater than 0";
+          ASSERT_GT(mEASConfig->mixBufferSize, 0) << "Mix buffer size must be greater than 0";
 
-        ASSERT_GT(mEASConfig->numChannels, 0) << "Number of channels must be greater than 0";
+          ASSERT_GT(mEASConfig->numChannels, 0) << "Number of channels must be greater than 0";
 
-        mPCMBufferSize = sizeof(EAS_PCM) * mEASConfig->mixBufferSize * mEASConfig->numChannels *
-                         kNumBuffersToCombine;
+          mPCMBufferSize = sizeof(EAS_PCM) * mEASConfig->mixBufferSize * mEASConfig->numChannels
+                           * kNumBuffersToCombine;
 
-        mPCMBuffer = new (std::nothrow) EAS_PCM[mPCMBufferSize];
-        ASSERT_NE(mPCMBuffer, nullptr) << "Failed to allocate a memory of size: " << mPCMBufferSize;
+          mPCMBuffer = new (std::nothrow) EAS_PCM[mPCMBufferSize];
+          ASSERT_NE(mPCMBuffer, nullptr)
+              << "Failed to allocate a memory of size: " << mPCMBufferSize;
 
-        mAudioBuffer =
-                new (std::nothrow) EAS_PCM[mEASConfig->mixBufferSize * mEASConfig->numChannels];
-        ASSERT_NE(mAudioBuffer, nullptr) << "Failed to allocate a memory of size: "
-                                         << mEASConfig->mixBufferSize * mEASConfig->numChannels;
-    }
+          mAudioBuffer = new (std::nothrow)
+              EAS_PCM[mEASConfig->mixBufferSize * mEASConfig->numChannels];
+          ASSERT_NE(mAudioBuffer, nullptr) << "Failed to allocate a memory of size: "
+                                           << mEASConfig->mixBufferSize * mEASConfig->numChannels;
+      }
 
-    virtual void TearDown() {
-        EAS_RESULT result;
-        if (mEASDataHandle) {
-            if (mEASStreamHandle) {
-                result = EAS_CloseFile(mEASDataHandle, mEASStreamHandle);
-                ASSERT_EQ(result, EAS_SUCCESS) << "Failed to close audio file/stream";
-            }
-            result = EAS_Shutdown(mEASDataHandle);
-            ASSERT_EQ(result, EAS_SUCCESS)
-                    << "Failed to deallocate the resources for synthesizer library";
-        }
-    }
+      virtual void TearDown() override
+      {
+          EAS_RESULT result;
+          if (mEASDataHandle) {
+              if (mEASStreamHandle) {
+                  result = EAS_CloseFile(mEASDataHandle, mEASStreamHandle);
+                  ASSERT_EQ(result, EAS_SUCCESS) << "Failed to close audio file/stream";
+              }
+              result = EAS_Shutdown(mEASDataHandle);
+              ASSERT_EQ(result, EAS_SUCCESS)
+                  << "Failed to deallocate the resources for synthesizer library";
+          }
+      }
 
     bool seekToLocation(EAS_I32);
     bool renderAudio();
