@@ -18,7 +18,7 @@ cmake_minimum_required(VERSION 3.14)
 
 project( sonivox
     LANGUAGES C CXX
-    VERSION 3.6.12.0
+    VERSION 3.6.13.0
 )
 
 # GoogleTest requires at least C++14
