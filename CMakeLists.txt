@@ -104,7 +104,7 @@ list(APPEND SOURCES
 configure_file(arm-wt-22k/host_src/eas.cmake libsonivox/eas.h @ONLY)
 
 list(APPEND HEADERS
-    ${PROJECT_BINARY_DIR}/libsonivox/eas.h
+    ${CMAKE_CURRENT_BINARY_DIR}/libsonivox/eas.h
     arm-wt-22k/host_src/eas_chorus.h
     arm-wt-22k/host_src/eas_reverb.h
     arm-wt-22k/host_src/eas_types.h
@@ -132,7 +132,7 @@ target_compile_definitions( sonivox-objects PRIVATE
 )
 
 target_include_directories( sonivox-objects PRIVATE
-    ${PROJECT_BINARY_DIR}/libsonivox
+    ${CMAKE_CURRENT_BINARY_DIR}/libsonivox
     arm-wt-22k/host_src
     arm-wt-22k/lib_src
     fakes
@@ -152,8 +152,9 @@ endif()
 if (BUILD_SONIVOX_STATIC)
     add_library( sonivox-static STATIC $<TARGET_OBJECTS:sonivox-objects> )
     target_include_directories( sonivox-static PUBLIC
-        "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/arm-wt-22k/include/libsonivox;${PROJECT_BINARY_DIR}/libsonivox>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/arm-wt-22k/include/libsonivox;${CMAKE_CURRENT_BINARY_DIR}/libsonivox>"
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/sonivox>" )
+    set_target_properties( sonivox-static PROPERTIES VERSION ${PROJECT_VERSION} )
     set_target_properties( sonivox-static PROPERTIES PUBLIC_HEADER "${HEADERS}")
     target_link_libraries( sonivox-static PUBLIC ${MATH_LIBRARY} )
     add_library( sonivox::sonivox-static ALIAS sonivox-static)
@@ -163,7 +164,7 @@ endif()
 if (BUILD_SONIVOX_SHARED)
     add_library( sonivox SHARED $<TARGET_OBJECTS:sonivox-objects> )
     target_include_directories( sonivox PUBLIC
-        "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/arm-wt-22k/include/libsonivox;${PROJECT_BINARY_DIR}/libsonivox>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/arm-wt-22k/include/libsonivox;${CMAKE_CURRENT_BINARY_DIR}/libsonivox>"
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/sonivox>" )
     set_target_properties( sonivox PROPERTIES VERSION ${PROJECT_VERSION} )
     set_target_properties( sonivox PROPERTIES SOVERSION ${PROJECT_VERSION_MAJOR} )
@@ -186,12 +187,12 @@ else()
 endif()
 
 if (BUILD_SONIVOX_STATIC)
-    configure_file(sonivox-static.pc.in ${PROJECT_BINARY_DIR}/sonivox-static.pc @ONLY)
+    configure_file(sonivox-static.pc.in ${CMAKE_CURRENT_BINARY_DIR}/sonivox-static.pc @ONLY)
     install( FILES ${CMAKE_CURRENT_BINARY_DIR}/sonivox-static.pc
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig )
 endif()
 if (BUILD_SONIVOX_SHARED)
-    configure_file(sonivox.pc.in ${PROJECT_BINARY_DIR}/sonivox.pc @ONLY)
+    configure_file(sonivox.pc.in ${CMAKE_CURRENT_BINARY_DIR}/sonivox.pc @ONLY)
     install( FILES ${CMAKE_CURRENT_BINARY_DIR}/sonivox.pc
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig )
 endif()
@@ -244,7 +245,7 @@ if (BUILD_TESTING)
     )
 
     target_include_directories( SonivoxTest PRIVATE
-        ${PROJECT_BINARY_DIR}
+        ${CMAKE_CURRENT_BINARY_DIR}
         arm-wt-22k/include
         fakes
     )
@@ -264,5 +265,5 @@ if (BUILD_TESTING)
     endif()
 
     include( GoogleTest )
-    gtest_discover_tests( SonivoxTest EXTRA_ARGS "-P${PROJECT_SOURCE_DIR}/test/res/" DISCOVERY_TIMEOUT 300 )
+    gtest_discover_tests( SonivoxTest EXTRA_ARGS "-P${CMAKE_CURRENT_SOURCE_DIR}/test/res/" DISCOVERY_TIMEOUT 300 )
 endif()
