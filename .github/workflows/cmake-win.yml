@@ -11,7 +11,7 @@ on:
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: RelWithDebInfo
-  INSTALL_LOCATION: ${{github.workspace}}/SonivoxV3
+  INSTALL_LOCATION: SonivoxV3
 
 jobs:
   build:
@@ -63,13 +63,13 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest -C ${{env.BUILD_TYPE}}
 
-#    - name: '${{ matrix.icon }} Install'
-#      run: cmake --install build
-#
-#    - name: '${{ matrix.icon }} Upload Artifacts'
-#      uses: actions/upload-artifact@v4
-#      with:
-#        name: SonivoxV3-${{matrix.sys}}
-#        path: ${{env.INSTALL_LOCATION}}/**/*
-#        retention-days: 90
-#        overwrite: true
+    - name: '${{ matrix.icon }} Install'
+      run: cmake --install build
+
+    - name: '${{ matrix.icon }} Upload Artifacts'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{env.INSTALL_LOCATION}}-${{matrix.sys}}
+        path: ${{env.INSTALL_LOCATION}}
+        retention-days: 90
+        overwrite: true
