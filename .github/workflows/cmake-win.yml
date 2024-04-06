@@ -71,6 +71,9 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{env.INSTALL_LOCATION}}-${{matrix.sys}}
-        path: ${{env.INSTALL_LOCATION}}
+        path: |
+          ${{env.INSTALL_LOCATION}}/bin
+          ${{env.INSTALL_LOCATION}}/include
+          ${{env.INSTALL_LOCATION}}/lib
         retention-days: 90
         overwrite: true
