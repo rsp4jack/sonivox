@@ -29,7 +29,7 @@ option(BUILD_SONIVOX_SHARED "Build the shared library" TRUE)
 option(BUILD_TESTING "Build the unit tests" TRUE)
 option(CMAKE_POSITION_INDEPENDENT_CODE "Whether to create position-independent targets" TRUE)
 option(USE_44KHZ "Use 44kHz wavetable instead of 22kHz one" TRUE)
-option(MAX_VOICES "Maximum number of voices" 64)
+set(MAX_VOICES 64 CACHE STRING "Maximum number of voices")
 
 include(GNUInstallDirs)
 
