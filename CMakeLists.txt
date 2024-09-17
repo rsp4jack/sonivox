@@ -28,6 +28,8 @@ option(BUILD_SONIVOX_STATIC "Build the static library" TRUE)
 option(BUILD_SONIVOX_SHARED "Build the shared library" TRUE)
 option(BUILD_TESTING "Build the unit tests" TRUE)
 option(CMAKE_POSITION_INDEPENDENT_CODE "Whether to create position-independent targets" TRUE)
+option(USE_44KHZ "Use 44kHz wavetable instead of 22kHz one" TRUE)
+option(MAX_VOICES "Maximum number of voices" 64)
 
 include(GNUInstallDirs)
 
@@ -98,8 +100,17 @@ list(APPEND SOURCES
 #arm-wt-22k/lib_src/eas_xmf.c
 #arm-wt-22k/lib_src/eas_xmfdata.c
 #arm-wt-22k/lib_src/jet.c
-  arm-wt-22k/lib_src/wt_22khz.c
 )
+
+if(USE_44KHZ)
+    list(APPEND SOURCES
+        arm-wt-22k/lib_src/wt_44khz.c
+    )
+else()
+    list(APPEND SOURCES
+        arm-wt-22k/lib_src/wt_22khz.c
+    )
+endif()
 
 configure_file(arm-wt-22k/host_src/eas.cmake libsonivox/eas.h @ONLY)
 
@@ -117,8 +128,7 @@ target_compile_definitions( sonivox-objects PRIVATE
   UNIFIED_DEBUG_MESSAGES
   EAS_WT_SYNTH
   NUM_OUTPUT_CHANNELS=2
-  _SAMPLE_RATE_22050
-  MAX_SYNTH_VOICES=64
+  MAX_SYNTH_VOICES=${MAX_VOICES}
   _16_BIT_SAMPLES
   _FILTER_ENABLED
   DLS_SYNTHESIZER
@@ -130,6 +140,16 @@ target_compile_definitions( sonivox-objects PRIVATE
   #_XMF_PARSER
   #JET_INTERFACE
 )
+
+if(USE_44KHZ)
+    target_compile_definitions( sonivox-objects PRIVATE
+        _SAMPLE_RATE_44100
+    )
+else()
+    target_compile_definitions( sonivox-objects PRIVATE
+        _SAMPLE_RATE_22050
+    )
+endif()
 
 target_include_directories( sonivox-objects PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}/libsonivox
