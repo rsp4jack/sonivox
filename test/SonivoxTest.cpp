@@ -354,11 +354,11 @@ TEST_P(SonivoxTest, DecodePauseResumeTest) {
 }
 
 INSTANTIATE_TEST_SUITE_P(SonivoxTestAll, SonivoxTest,
-                         ::testing::Values(make_tuple("midi_a.mid", 2000, 2, 22050),
-                                           make_tuple("midi8sec.mid", 8002, 2, 22050),
-                                           make_tuple("midi_cs.mid", 2000, 2, 22050),
-                                           make_tuple("midi_gs.mid", 2000, 2, 22050),
-                                           make_tuple("ants.mid", 17233, 2, 22050)));
+                         ::testing::Values(make_tuple("midi_a.mid", 2000, 2, 44100),
+                                           make_tuple("midi8sec.mid", 8002, 2, 44100),
+                                           make_tuple("midi_cs.mid", 2000, 2, 44100),
+                                           make_tuple("midi_gs.mid", 2000, 2, 44100),
+                                           make_tuple("ants.mid", 17233, 2, 44100)));
                                            //make_tuple("testmxmf.mxmf", 29095, 2, 22050)));
 
 int main(int argc, char **argv) {
