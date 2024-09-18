@@ -18,9 +18,9 @@ cmake_minimum_required(VERSION 3.14)
 project( sonivoxrender LANGUAGES C )
 
 # Alternative 1: Using CMake only and sonivox installed:
-find_package ( sonivox CONFIG REQUIRED )
-add_executable ( sonivoxrender sonivoxrender.c )
-target_link_libraries ( sonivoxrender sonivox::sonivox-static )
+# find_package ( sonivox CONFIG REQUIRED )
+# add_executable ( sonivoxrender sonivoxrender.c )
+# target_link_libraries ( sonivoxrender sonivox::sonivox-static )
 
 # Alternative 2: Using pkg-config and sonivox installed:
 #find_package ( PkgConfig REQUIRED )
@@ -30,5 +30,5 @@ target_link_libraries ( sonivoxrender sonivox::sonivox-static )
 
 # Alternative 3: sonivox in a subdirectory (for instance: a git submodule )
 #add_subdirectory( sonivox )
-#add_executable ( sonivoxrender sonivoxrender.c )
-#target_link_libraries ( sonivoxrender sonivox::sonivox-static )
+add_executable ( sonivoxrender sonivoxrender.c )
+target_link_libraries ( sonivoxrender sonivox::sonivox-static )
