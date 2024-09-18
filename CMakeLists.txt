@@ -300,7 +300,7 @@ if (BUILD_TESTING)
 endif()
 
 # Example program
-if (BUILD_EXAMPLE)
+if (BUILD_EXAMPLE AND BUILD_SONIVOX_STATIC)
     set(sonivox_DIR ${CMAKE_CURRENT_BINARY_DIR})
     add_subdirectory(example)
     install( TARGETS sonivoxrender
