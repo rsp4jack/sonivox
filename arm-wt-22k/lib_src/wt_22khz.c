@@ -28007,13 +28007,20 @@ const EAS_U32 eas_sampleOffsets[] =
  * S_EAS
  *----------------------------------------------------------------------------
 */
+
+#ifdef _SAMPLE_RATE_44100
+const EAS_U32 sampleRate = 0xAC44;
+#else
+const EAS_U32 sampleRate = 0x5622;
+#endif
+
 const S_EAS easSoundLib =
 {
     0x01534145,
 #if defined (_8_BIT_SAMPLES)
-    0x00105622,
+    0x00100000 | sampleRate,
 #else //_16_BIT_SAMPLES
-    0x00205622,
+    0x00200000 | sampleRate,
 #endif
 
     eas_banks,

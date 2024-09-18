@@ -24,8 +24,11 @@ project( sonivox
 # GoogleTest requires at least C++14
 set(CMAKE_CXX_STANDARD 14)
 
+option(OUTPUT_AUDIO_44100 "Output 44100 Hz audio (instead of 22050 Hz)" TRUE)
+option(USE_16BITS_SAMPLES "Use 16 bits samples (instead of 8 bit)" TRUE)
 option(BUILD_SONIVOX_STATIC "Build the static library" TRUE)
 option(BUILD_SONIVOX_SHARED "Build the shared library" TRUE)
+option(BUILD_EXAMPLE "Build and install the example program" TRUE)
 option(BUILD_TESTING "Build the unit tests" TRUE)
 option(CMAKE_POSITION_INDEPENDENT_CODE "Whether to create position-independent targets" TRUE)
 
@@ -117,9 +120,7 @@ target_compile_definitions( sonivox-objects PRIVATE
   UNIFIED_DEBUG_MESSAGES
   EAS_WT_SYNTH
   NUM_OUTPUT_CHANNELS=2
-  _SAMPLE_RATE_22050
   MAX_SYNTH_VOICES=64
-  _16_BIT_SAMPLES
   _FILTER_ENABLED
   DLS_SYNTHESIZER
   _REVERB_ENABLED
@@ -130,6 +131,26 @@ target_compile_definitions( sonivox-objects PRIVATE
   #_XMF_PARSER
   #JET_INTERFACE
 )
+
+if (USE_16BITS_SAMPLES)
+    target_compile_definitions( sonivox-objects PRIVATE
+        _16_BIT_SAMPLES
+    )
+else()
+    target_compile_definitions( sonivox-objects PRIVATE
+        _8_BIT_SAMPLES
+    )
+endif()
+
+if (OUTPUT_AUDIO_44100)
+    target_compile_definitions( sonivox-objects PRIVATE
+        _SAMPLE_RATE_44100
+    )
+else()
+    target_compile_definitions( sonivox-objects PRIVATE
+        _SAMPLE_RATE_22050
+    )
+endif()
 
 target_include_directories( sonivox-objects PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}/libsonivox
@@ -250,6 +271,16 @@ if (BUILD_TESTING)
         fakes
     )
 
+    if (OUTPUT_AUDIO_44100)
+        target_compile_definitions( SonivoxTest PRIVATE
+            _SAMPLE_RATE_44100
+        )
+    else()
+        target_compile_definitions( SonivoxTest PRIVATE
+            _SAMPLE_RATE_22050
+        )
+    endif()
+
     target_link_libraries( SonivoxTest PRIVATE
       GTest::gtest_main
     )
@@ -266,4 +297,13 @@ if (BUILD_TESTING)
 
     include( GoogleTest )
     gtest_discover_tests( SonivoxTest EXTRA_ARGS "-P${CMAKE_CURRENT_SOURCE_DIR}/test/res/" DISCOVERY_TIMEOUT 300 )
+endif()
+
+# Example program
+if (BUILD_EXAMPLE)
+    set(sonivox_DIR ${CMAKE_CURRENT_BINARY_DIR})
+    add_subdirectory(example)
+    install( TARGETS sonivoxrender
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
 endif()
