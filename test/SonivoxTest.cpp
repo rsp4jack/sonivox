@@ -31,6 +31,12 @@
 static constexpr uint32_t kNumBuffersToCombine = 4;
 static constexpr uint32_t kSeekBeyondPlayTimeOffsetMs = 10;
 
+#ifdef _SAMPLE_RATE_44100
+static constexpr uint32_t sampleRate = 44100;
+#else
+static constexpr uint32_t sampleRate = 22050;
+#endif
+
 static SonivoxTestEnvironment *gEnv = nullptr;
 static int readAt(void *, void *, int, int);
 static int getSize(void *);
@@ -353,13 +359,14 @@ TEST_P(SonivoxTest, DecodePauseResumeTest) {
     ASSERT_EQ(state, EAS_STATE_PLAY) << "Invalid state reached when resumed";
 }
 
-INSTANTIATE_TEST_SUITE_P(SonivoxTestAll, SonivoxTest,
-                         ::testing::Values(make_tuple("midi_a.mid", 2000, 2, 22050),
-                                           make_tuple("midi8sec.mid", 8002, 2, 22050),
-                                           make_tuple("midi_cs.mid", 2000, 2, 22050),
-                                           make_tuple("midi_gs.mid", 2000, 2, 22050),
-                                           make_tuple("ants.mid", 17233, 2, 22050)));
-                                           //make_tuple("testmxmf.mxmf", 29095, 2, 22050)));
+INSTANTIATE_TEST_SUITE_P(SonivoxTestAll,
+                         SonivoxTest,
+                         ::testing::Values(make_tuple("midi_a.mid", 2000, 2, sampleRate),
+                                           make_tuple("midi8sec.mid", 8002, 2, sampleRate),
+                                           make_tuple("midi_cs.mid", 2000, 2, sampleRate),
+                                           make_tuple("midi_gs.mid", 2000, 2, sampleRate),
+                                           make_tuple("ants.mid", 17233, 2, sampleRate)));
+                                        // make_tuple("testmxmf.mxmf", 29095, 2, sampleRate)));
 
 int main(int argc, char **argv) {
     gEnv = new SonivoxTestEnvironment();

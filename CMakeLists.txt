@@ -264,6 +264,16 @@ if (BUILD_TESTING)
       test/SonivoxTest.cpp
     )
 
+    if(USE_44KHZ)
+        target_compile_definitions( SonivoxTest PRIVATE
+            _SAMPLE_RATE_44100
+        )
+    else()
+        target_compile_definitions( SonivoxTest PRIVATE
+            _SAMPLE_RATE_22050
+        )
+    endif()
+
     target_include_directories( SonivoxTest PRIVATE
         ${CMAKE_CURRENT_BINARY_DIR}
         arm-wt-22k/include
