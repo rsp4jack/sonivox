@@ -18,9 +18,21 @@ You may find several projects already using this library as a git submodule:
 * [Linux-SonivoxEas](https://github.com/pedrolcl/Linux-SonivoxEas) with ALSA Sequencer MIDI input and Pulseaudio output.
 * [multiplatform-sonivoxeas](https://github.com/pedrolcl/multiplatform-sonivoxeas) with Drumstick::RT MIDI input and Qt Multimedia audio output.
 
-The build system has two options: `BUILD_SONIVOX_STATIC` and `BUILD_SONIVOX_SHARED` to control the generation and install of both the static and shared libraries from the sources. Both options are ON by default.
-Another option is `BUILD_TESTING`, also ON by default, to control if the unit tests are built, which require Google Test.
+## Build options
+
+The build system has the following options:
+
+* `USE_44KHZ`: Renders 44100 Hz audio (ON by default). If set to OFF will output 22050 Hz audio.
+* `USE_16BITS_SAMPLES`: Uses 16 bits samples (instead of 8 bit). ON by default. The rendered audio uses always 16 bits.
+* `BUILD_SONIVOX_STATIC` and `BUILD_SONIVOX_SHARED`: to control the generation and install of both the static and shared libraries from the sources. Both options are ON by default (at least one must be selected).
+* `BUILD_TESTING`: ON by default, to control if the unit tests are built, which require Google Test.
+* `BUILD_EXAMPLE`: ON by default, to build and install the example program.
+* `CMAKE_POSITION_INDEPENDENT_CODE`: Whether to create position-independent targets. ON By default.
+* `MAX_VOICES`: Maximum number of voices. 64 by default.
+
 See also the [CMake documentation](https://cmake.org/cmake/help/latest/index.html) for common build options.
+
+## Differences with upstream
 
 This fork currently reverts these commits:
 
@@ -34,10 +46,9 @@ All the sources from the Android repository are kept in place, but some are not 
 
 You may find and use the installed libraries with `pkg-config` or the `find_package()` CMake command. The library API is documented in the 'docs' directory contents.
 
-The 'example' directory contains a simple command line utility to render standard MIDI files into raw PCM audio streams. This utility can be compiled after building and installing sonivox in some prefix like `/usr`, `/usr/local`, or `$HOME/Sonivox`.
-The CMake script contains three alternatives: using CMake only, using `pkg-config` and using sonivox as a subdirectory.
+The 'example' directory contains a simple command line utility to render standard MIDI files into raw PCM audio streams. This utility may be compiled when building the library and also installed. You may find a standalone project containing this program here: https://github.com/pedrolcl/sonivox-example
 
-Once compiled, you can use the program to listen MIDI files or to create MP3 files. These are the available command line options:
+You can use the program to listen MIDI files or to create audio files (like MP3 or WAV). These are the available command line options:
 
 ~~~
 $ ./sonivoxrender -h
@@ -50,17 +61,23 @@ Options:
     -w n            reverb wet: 0..32765.
 ~~~
 
+The following examples assume the default option USE_44KHZ=ON:
+
 Example 1: Render a MIDI file and save the rendered audio as a raw audio file:
 
     $ sonivoxrender ants.mid > ants.pcm
 
 Example 2: pipe the rendered audio thru the Linux ALSA 'aplay' utility:
 
-    $ sonivoxrender ants.mid | aplay -c 2 -f S16_LE -r 22050
+    $ sonivoxrender ants.mid | aplay -c 2 -f S16_LE -r 44100
 
-Example 3: pipe the rendered audio thru the 'lame' utility creating a MP3 file:
+Example 3: pipe the rendered audio thru the ['lame'](https://lame.sourceforge.io) utility creating a MP3 file:
 
-    $ sonivoxrender ants.mid | lame -r -s 22050 - ants.mp3
+    $ sonivoxrender ants.mid | lame -r -s 44100 - ants.mp3
+    
+Example 4: pipe the rendered audio thru the ['sox'](https://sourceforge.net/projects/sox/) utility creating a WAV file:
+
+    $ sonivoxrender ants.mid | sox -t s16 -c 2 -r 44100 - ants.wav
 
 ## Unit tests
 
@@ -83,9 +100,9 @@ There are two environment variables that you may set before running the tests (m
 
 ## License
 
-Copyright (c) 2022-2023 Pedro López-Cabanillas.
+Copyright (c) 2022-2024 Pedro López-Cabanillas.
 
-Copyright (c) 2008-2023, The Android Open Source Project.
+Copyright (c) 2008-2024, The Android Open Source Project.
 
 Copyright (c) 2004-2006 Sonic Network Inc.
 

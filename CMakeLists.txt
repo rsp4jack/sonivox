@@ -282,16 +282,6 @@ if (BUILD_TESTING)
         fakes
     )
 
-    if (OUTPUT_AUDIO_44100)
-        target_compile_definitions( SonivoxTest PRIVATE
-            _SAMPLE_RATE_44100
-        )
-    else()
-        target_compile_definitions( SonivoxTest PRIVATE
-            _SAMPLE_RATE_22050
-        )
-    endif()
-
     target_link_libraries( SonivoxTest PRIVATE
       GTest::gtest_main
     )
