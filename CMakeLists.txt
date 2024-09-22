@@ -104,7 +104,7 @@ list(APPEND SOURCES
 
 if(USE_44KHZ)
     list(APPEND SOURCES
-        arm-wt-22k/jetcreator_lib_src/darwin-x86/wt_44khz.c
+        arm-wt-22k/lib_src/wt_44khz.c
     )
 else()
     list(APPEND SOURCES
@@ -129,6 +129,7 @@ target_compile_definitions( sonivox-objects PRIVATE
   EAS_WT_SYNTH
   NUM_OUTPUT_CHANNELS=2
   MAX_SYNTH_VOICES=${MAX_VOICES}
+  _16_BIT_SAMPLES
   _FILTER_ENABLED
   DLS_SYNTHESIZER
   _REVERB_ENABLED
@@ -143,12 +144,10 @@ target_compile_definitions( sonivox-objects PRIVATE
 if(USE_44KHZ)
     target_compile_definitions( sonivox-objects PRIVATE
         _SAMPLE_RATE_44100
-        _8_BIT_SAMPLES
     )
 else()
     target_compile_definitions( sonivox-objects PRIVATE
         _SAMPLE_RATE_22050
-        _16_BIT_SAMPLES
     )
 endif()
 
