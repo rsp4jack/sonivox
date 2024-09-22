@@ -100,17 +100,8 @@ list(APPEND SOURCES
 #arm-wt-22k/lib_src/eas_xmf.c
 #arm-wt-22k/lib_src/eas_xmfdata.c
 #arm-wt-22k/lib_src/jet.c
+  arm-wt-22k/lib_src/wt_200k_G.c
 )
-
-if(USE_44KHZ)
-    list(APPEND SOURCES
-        arm-wt-22k/lib_src/wt_44khz.c
-    )
-else()
-    list(APPEND SOURCES
-        arm-wt-22k/lib_src/wt_22khz.c
-    )
-endif()
 
 configure_file(arm-wt-22k/host_src/eas.cmake libsonivox/eas.h @ONLY)
 
