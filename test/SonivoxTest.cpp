@@ -366,7 +366,7 @@ INSTANTIATE_TEST_SUITE_P(SonivoxTestAll,
                                            make_tuple("midi_cs.mid", 2000, 2, sampleRate),
                                            make_tuple("midi_gs.mid", 2000, 2, sampleRate),
                                            make_tuple("ants.mid", 17233, 2, sampleRate)));
-//make_tuple("testmxmf.mxmf", 29095, 2, sampleRate)));
+                                        // make_tuple("testmxmf.mxmf", 29095, 2, sampleRate)));
 
 int main(int argc, char **argv) {
     gEnv = new SonivoxTestEnvironment();

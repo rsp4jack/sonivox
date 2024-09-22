@@ -24,13 +24,14 @@ project( sonivox
 # GoogleTest requires at least C++14
 set(CMAKE_CXX_STANDARD 14)
 
-option(OUTPUT_AUDIO_44100 "Output 44100 Hz audio (instead of 22050 Hz)" TRUE)
+option(USE_44KHZ "Output 44100 Hz audio (instead of 22050 Hz)" TRUE)
 option(USE_16BITS_SAMPLES "Use 16 bits samples (instead of 8 bit)" TRUE)
 option(BUILD_SONIVOX_STATIC "Build the static library" TRUE)
 option(BUILD_SONIVOX_SHARED "Build the shared library" TRUE)
 option(BUILD_EXAMPLE "Build and install the example program" TRUE)
 option(BUILD_TESTING "Build the unit tests" TRUE)
 option(CMAKE_POSITION_INDEPENDENT_CODE "Whether to create position-independent targets" TRUE)
+set(MAX_VOICES 64 CACHE STRING "Maximum number of voices")
 
 include(GNUInstallDirs)
 
@@ -101,7 +102,7 @@ list(APPEND SOURCES
 #arm-wt-22k/lib_src/eas_xmf.c
 #arm-wt-22k/lib_src/eas_xmfdata.c
 #arm-wt-22k/lib_src/jet.c
-  arm-wt-22k/lib_src/wt_22khz.c
+  arm-wt-22k/lib_src/wt_200k_G.c
 )
 
 configure_file(arm-wt-22k/host_src/eas.cmake libsonivox/eas.h @ONLY)
@@ -120,7 +121,7 @@ target_compile_definitions( sonivox-objects PRIVATE
   UNIFIED_DEBUG_MESSAGES
   EAS_WT_SYNTH
   NUM_OUTPUT_CHANNELS=2
-  MAX_SYNTH_VOICES=64
+  MAX_SYNTH_VOICES=${MAX_VOICES}
   _FILTER_ENABLED
   DLS_SYNTHESIZER
   _REVERB_ENABLED
@@ -142,7 +143,7 @@ else()
     )
 endif()
 
-if (OUTPUT_AUDIO_44100)
+if(USE_44KHZ)
     target_compile_definitions( sonivox-objects PRIVATE
         _SAMPLE_RATE_44100
     )
@@ -264,6 +265,16 @@ if (BUILD_TESTING)
     add_executable( SonivoxTest
       test/SonivoxTest.cpp
     )
+
+    if(USE_44KHZ)
+        target_compile_definitions( SonivoxTest PRIVATE
+            _SAMPLE_RATE_44100
+        )
+    else()
+        target_compile_definitions( SonivoxTest PRIVATE
+            _SAMPLE_RATE_22050
+        )
+    endif()
 
     target_include_directories( SonivoxTest PRIVATE
         ${CMAKE_CURRENT_BINARY_DIR}
