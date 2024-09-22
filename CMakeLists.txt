@@ -24,11 +24,13 @@ project( sonivox
 # GoogleTest requires at least C++14
 set(CMAKE_CXX_STANDARD 14)
 
+option(USE_44KHZ "Output 44100 Hz audio (instead of 22050 Hz)" TRUE)
+option(USE_16BITS_SAMPLES "Use 16 bits samples (instead of 8 bit)" TRUE)
 option(BUILD_SONIVOX_STATIC "Build the static library" TRUE)
 option(BUILD_SONIVOX_SHARED "Build the shared library" TRUE)
+option(BUILD_EXAMPLE "Build and install the example program" TRUE)
 option(BUILD_TESTING "Build the unit tests" TRUE)
 option(CMAKE_POSITION_INDEPENDENT_CODE "Whether to create position-independent targets" TRUE)
-option(USE_44KHZ "Use 44kHz wavetable instead of 22kHz one" TRUE)
 set(MAX_VOICES 64 CACHE STRING "Maximum number of voices")
 
 include(GNUInstallDirs)
@@ -120,7 +122,6 @@ target_compile_definitions( sonivox-objects PRIVATE
   EAS_WT_SYNTH
   NUM_OUTPUT_CHANNELS=2
   MAX_SYNTH_VOICES=${MAX_VOICES}
-  _16_BIT_SAMPLES
   _FILTER_ENABLED
   DLS_SYNTHESIZER
   _REVERB_ENABLED
@@ -131,6 +132,16 @@ target_compile_definitions( sonivox-objects PRIVATE
   #_XMF_PARSER
   #JET_INTERFACE
 )
+
+if (USE_16BITS_SAMPLES)
+    target_compile_definitions( sonivox-objects PRIVATE
+        _16_BIT_SAMPLES
+    )
+else()
+    target_compile_definitions( sonivox-objects PRIVATE
+        _8_BIT_SAMPLES
+    )
+endif()
 
 if(USE_44KHZ)
     target_compile_definitions( sonivox-objects PRIVATE
@@ -287,4 +298,13 @@ if (BUILD_TESTING)
 
     include( GoogleTest )
     gtest_discover_tests( SonivoxTest EXTRA_ARGS "-P${CMAKE_CURRENT_SOURCE_DIR}/test/res/" DISCOVERY_TIMEOUT 300 )
+endif()
+
+# Example program
+if (BUILD_EXAMPLE)
+    set(sonivox_DIR ${CMAKE_CURRENT_BINARY_DIR})
+    add_subdirectory(example)
+    install( TARGETS sonivoxrender
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
 endif()
