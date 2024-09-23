@@ -71,6 +71,10 @@ Example 2: pipe the rendered audio thru the Linux ALSA 'aplay' utility:
 
     $ sonivoxrender ants.mid | aplay -c 2 -f S16_LE -r 44100
 
+equivalent to:
+
+    $ sonivoxrender ants.mid | aplay -f cd
+
 Example 3: pipe the rendered audio thru the ['lame'](https://lame.sourceforge.io) utility creating a MP3 file:
 
     $ sonivoxrender ants.mid | lame -r -s 44100 - ants.mp3
@@ -78,6 +82,10 @@ Example 3: pipe the rendered audio thru the ['lame'](https://lame.sourceforge.io
 Example 4: pipe the rendered audio thru the ['sox'](https://sourceforge.net/projects/sox/) utility creating a WAV file:
 
     $ sonivoxrender ants.mid | sox -t s16 -c 2 -r 44100 - ants.wav
+
+Example 5: pipe the rendered audio thru the PulseAudio's 'pacat' utility:
+
+    $ sonivoxrender ants.mid | pacat
 
 ## Unit tests
 
