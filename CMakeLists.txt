@@ -18,13 +18,14 @@ cmake_minimum_required(VERSION 3.14)
 
 project( sonivox
     LANGUAGES C CXX
-    VERSION 3.6.13.0
+    VERSION 3.6.14.0
 )
 
 # GoogleTest requires at least C++14
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
-option(USE_44KHZ "Output 44100 Hz audio (instead of 22050 Hz)" TRUE)
+option(USE_44KHZ "Output 44100 Hz audio sample rate (instead of 22050 Hz)" TRUE)
 option(USE_16BITS_SAMPLES "Use 16 bits samples (instead of 8 bit)" TRUE)
 option(BUILD_SONIVOX_STATIC "Build the static library" TRUE)
 option(BUILD_SONIVOX_SHARED "Build the shared library" TRUE)
@@ -33,7 +34,12 @@ option(BUILD_TESTING "Build the unit tests" TRUE)
 option(CMAKE_POSITION_INDEPENDENT_CODE "Whether to create position-independent targets" TRUE)
 set(MAX_VOICES 64 CACHE STRING "Maximum number of voices")
 
+include(CMakeDependentOption)
+cmake_dependent_option(BUILD_MANPAGE "Build the manpage of the example program" FALSE "BUILD_EXAMPLE" FALSE)
+
 include(GNUInstallDirs)
+
+set(PROJECT_RELEASE_DATE "October 6, 2024")
 
 if (BUILD_TESTING)
     find_package(GTest CONFIG)
