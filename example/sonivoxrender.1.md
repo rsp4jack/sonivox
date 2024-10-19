@@ -38,7 +38,7 @@ It reads .MID (Standard MIDI Files) file format, and writes an audio stream to t
 
 -c  _chorus_preset_
 
-:   Chorus preset between 0 and 4: 0=no, 1..4=presents.
+:   Chorus preset between 0 and 4: 0=no, 1..4=presets.
 
 -v _master_volume_
 

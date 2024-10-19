@@ -308,7 +308,7 @@ int main (int argc, char **argv)
                         "\t-r n\t\treverb preset: 0=no, 1=large hall, 2=hall, 3=chamber, 4=room.\n"\
                         "\t-w n\t\treverb wet: 0..32767.\n"
                         "\t-n n\t\treverb dry: 0..32767.\n"
-                        "\t-c n\t\tchorus preset: 0=no, 1..4=presents.\n"
+                        "\t-c n\t\tchorus preset: 0=no, 1..4=presets.\n"
                         "\t-v n\t\tmaster volume: 0..100.\n"
                         , argv[0]);
             return EXIT_FAILURE;
