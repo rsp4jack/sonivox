@@ -24,10 +24,14 @@
 
 #include <eas.h>
 #include <eas_reverb.h>
+#include <eas_chorus.h>
 
 const char *dls_path = NULL;
-EAS_I32 reverb_type = -1;
-EAS_I32 reverb_wet = 0;
+EAS_I32 playback_gain = 90;
+EAS_I32 reverb_type = 0;
+EAS_I32 reverb_wet = 32767;
+EAS_I32 reverb_dry = 0;
+EAS_I32 chorus_type = 0;
 EAS_DATA_HANDLE mEASDataHandle = NULL;
 
 int Read(void *handle, void *buf, int offset, int size) {
@@ -101,11 +105,18 @@ int initializeLibrary(void)
         }
     }
 
-    EAS_BOOL sw = EAS_TRUE;
-    EAS_I32 preset = reverb_type - 1;
-    if ( preset >= EAS_PARAM_REVERB_LARGE_HALL && preset <= EAS_PARAM_REVERB_ROOM ) {
-        sw = EAS_FALSE;
-        result = EAS_SetParameter(mEASDataHandle, EAS_MODULE_REVERB, EAS_PARAM_REVERB_PRESET, preset);
+    result = EAS_SetVolume(mEASDataHandle, NULL, playback_gain);
+    if (result != EAS_SUCCESS) {
+        fprintf(stderr, "Failed to set volume\n");
+        ok = EXIT_FAILURE;
+        goto cleanup;
+    }
+
+    EAS_BOOL reverb_bypass = EAS_TRUE;
+    EAS_I32 reverb_preset = reverb_type - 1;
+    if ( reverb_preset >= EAS_PARAM_REVERB_LARGE_HALL && reverb_preset <= EAS_PARAM_REVERB_ROOM ) {
+        reverb_bypass = EAS_FALSE;
+        result = EAS_SetParameter(mEASDataHandle, EAS_MODULE_REVERB, EAS_PARAM_REVERB_PRESET, reverb_preset);
         if (result != EAS_SUCCESS) {
             fprintf(stderr, "Failed to set reverb preset");
             ok = EXIT_FAILURE;
@@ -120,10 +131,36 @@ int initializeLibrary(void)
             ok = EXIT_FAILURE;
             goto cleanup;
         }
+
+        result = EAS_SetParameter(mEASDataHandle, EAS_MODULE_REVERB, EAS_PARAM_REVERB_DRY, reverb_dry);
+        if (result != EAS_SUCCESS) {
+            fprintf(stderr, "Failed to set reverb dry amount");
+            ok = EXIT_FAILURE;
+            goto cleanup;
+        }
     }
-    result = EAS_SetParameter(mEASDataHandle, EAS_MODULE_REVERB, EAS_PARAM_REVERB_BYPASS, sw);
+    result = EAS_SetParameter(mEASDataHandle, EAS_MODULE_REVERB, EAS_PARAM_REVERB_BYPASS, reverb_bypass);
     if (result != EAS_SUCCESS) {
         fprintf(stderr, "Failed to set reverb bypass");
+        ok = EXIT_FAILURE;
+        goto cleanup;
+    }
+
+    EAS_BOOL chorus_bypass = EAS_TRUE;
+    EAS_I32 chorus_preset = chorus_type - 1;
+    if ( chorus_preset >= EAS_PARAM_CHORUS_PRESET1 && chorus_preset <= EAS_PARAM_CHORUS_PRESET4 ) {
+        chorus_bypass = EAS_FALSE;
+        result = EAS_SetParameter(mEASDataHandle, EAS_MODULE_CHORUS, EAS_PARAM_CHORUS_PRESET, chorus_preset);
+        if (result != EAS_SUCCESS) {
+            fprintf(stderr, "Failed to set chorus preset");
+            ok = EXIT_FAILURE;
+            goto cleanup;
+        }
+    }
+
+    result = EAS_SetParameter(mEASDataHandle, EAS_MODULE_CHORUS, EAS_PARAM_CHORUS_BYPASS, chorus_bypass);
+    if (result != EAS_SUCCESS) {
+        fprintf(stderr, "Failed to set chorus bypass");
         ok = EXIT_FAILURE;
         goto cleanup;
     }
@@ -259,17 +296,21 @@ int main (int argc, char **argv)
 
     opterr = 0;
 
-    while ((c = getopt (argc, argv, "hd:r:w:")) != -1) {
+    while ((c = getopt (argc, argv, "hd:r:w:n:c:v:")) != -1) {
         switch (c)
         {
         case 'h':
-            fprintf (stderr, "Usage: %s [-h] [-d file.dls] [-r 0..4] [-w 0..32765] file.mid ...\n"\
+            fprintf (stderr, "Usage: %s [-h] [-d file.dls] [-r 0..4] [-w 0..32767] [-n 0..32767] [-c 0..4] [-v 0..100] file.mid ...\n"\
                         "Render standard MIDI files into raw PCM audio.\n"\
                         "Options:\n"\
                         "\t-h\t\tthis help message.\n"\
                         "\t-d file.dls\tDLS soundfont.\n"\
                         "\t-r n\t\treverb preset: 0=no, 1=large hall, 2=hall, 3=chamber, 4=room.\n"\
-                        "\t-w n\t\treverb wet: 0..32765.\n", argv[0]);
+                        "\t-w n\t\treverb wet: 0..32767.\n"
+                        "\t-n n\t\treverb dry: 0..32767.\n"
+                        "\t-c n\t\tchorus preset: 0=no, 1..4=presents.\n"
+                        "\t-v n\t\tmaster volume: 0..100.\n"
+                        , argv[0]);
             return EXIT_FAILURE;
         case 'd':
             dls_path = optarg;
@@ -283,8 +324,29 @@ int main (int argc, char **argv)
             break;
         case 'w':
             reverb_wet = atoi(optarg);
-            if (reverb_wet < 0 || reverb_wet > 32765) {
-                fprintf (stderr, "invalid reverb amount: %ld\n", reverb_wet);
+            if (reverb_wet < 0 || reverb_wet > 32767) {
+                fprintf (stderr, "invalid reverb wet: %ld\n", reverb_wet);
+                return EXIT_FAILURE;
+            }
+            break;
+        case 'n':
+            reverb_dry = atoi(optarg);
+            if (reverb_dry < 0 || reverb_dry > 32767) {
+                fprintf (stderr, "invalid reverb dry: %ld\n", reverb_dry);
+                return EXIT_FAILURE;
+            }
+            break;
+        case 'c':
+            chorus_type = atoi(optarg);
+            if (chorus_type < 0 || chorus_type > 4) {
+                fprintf (stderr, "invalid chorus preset: %ld\n", chorus_type);
+                return EXIT_FAILURE;
+            }
+            break;
+        case 'v':
+            playback_gain = atoi(optarg);
+            if (playback_gain < 0 || playback_gain > 100) {
+                fprintf (stderr, "invalid playback gain: %ld\n", playback_gain);
                 return EXIT_FAILURE;
             }
             break;
