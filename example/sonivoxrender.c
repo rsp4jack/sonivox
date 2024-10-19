@@ -101,13 +101,6 @@ int initializeLibrary(void)
         }
     }
 
-    result = EAS_SetParameter(mEASDataHandle, EAS_MODULE_REVERB, EAS_PARAM_REVERB_WET, reverb_wet);
-    if (result != EAS_SUCCESS) {
-        fprintf(stderr, "Failed to set reverb wet amount");
-        ok = EXIT_FAILURE;
-        goto cleanup;
-    }
-
     EAS_BOOL sw = EAS_TRUE;
     EAS_I32 preset = reverb_type - 1;
     if ( preset >= EAS_PARAM_REVERB_LARGE_HALL && preset <= EAS_PARAM_REVERB_ROOM ) {
@@ -115,6 +108,15 @@ int initializeLibrary(void)
         result = EAS_SetParameter(mEASDataHandle, EAS_MODULE_REVERB, EAS_PARAM_REVERB_PRESET, preset);
         if (result != EAS_SUCCESS) {
             fprintf(stderr, "Failed to set reverb preset");
+            ok = EXIT_FAILURE;
+            goto cleanup;
+        }
+        result = EAS_SetParameter(mEASDataHandle,
+                                  EAS_MODULE_REVERB,
+                                  EAS_PARAM_REVERB_WET,
+                                  reverb_wet);
+        if (result != EAS_SUCCESS) {
+            fprintf(stderr, "Failed to set reverb wet amount");
             ok = EXIT_FAILURE;
             goto cleanup;
         }
