@@ -18,7 +18,7 @@ cmake_minimum_required(VERSION 3.14)
 
 project( sonivox
     LANGUAGES C CXX
-    VERSION 3.6.14.0
+    VERSION 3.6.15.0
 )
 
 # GoogleTest requires at least C++14
@@ -39,7 +39,7 @@ cmake_dependent_option(BUILD_MANPAGE "Build the manpage of the example program" 
 
 include(GNUInstallDirs)
 
-set(PROJECT_RELEASE_DATE "October 6, 2024")
+#set(PROJECT_RELEASE_DATE "October 6, 2024")
 
 if (BUILD_TESTING)
     find_package(GTest CONFIG)
