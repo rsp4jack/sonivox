@@ -32,6 +32,7 @@ EAS_I32 reverb_type = 0;
 EAS_I32 reverb_wet = 32767;
 EAS_I32 reverb_dry = 0;
 EAS_I32 chorus_type = 0;
+EAS_I32 chorus_level = 32767;
 EAS_DATA_HANDLE mEASDataHandle = NULL;
 
 int Read(void *handle, void *buf, int offset, int size) {
@@ -153,6 +154,13 @@ int initializeLibrary(void)
         result = EAS_SetParameter(mEASDataHandle, EAS_MODULE_CHORUS, EAS_PARAM_CHORUS_PRESET, chorus_preset);
         if (result != EAS_SUCCESS) {
             fprintf(stderr, "Failed to set chorus preset");
+            ok = EXIT_FAILURE;
+            goto cleanup;
+        }
+
+        result = EAS_SetParameter(mEASDataHandle, EAS_MODULE_CHORUS, EAS_PARAM_CHORUS_LEVEL, chorus_level);
+        if (result != EAS_SUCCESS) {
+            fprintf(stderr, "Failed to set chorus level");
             ok = EXIT_FAILURE;
             goto cleanup;
         }
@@ -296,11 +304,11 @@ int main (int argc, char **argv)
 
     opterr = 0;
 
-    while ((c = getopt (argc, argv, "hd:r:w:n:c:v:")) != -1) {
+    while ((c = getopt (argc, argv, "hd:r:w:n:c:l:v:")) != -1) {
         switch (c)
         {
         case 'h':
-            fprintf (stderr, "Usage: %s [-h] [-d file.dls] [-r 0..4] [-w 0..32767] [-n 0..32767] [-c 0..4] [-v 0..100] file.mid ...\n"\
+            fprintf (stderr, "Usage: %s [-h] [-d file.dls] [-r 0..4] [-w 0..32767] [-n 0..32767] [-c 0..4] [-l 0..32767] [-v 0..100] file.mid ...\n"\
                         "Render standard MIDI files into raw PCM audio.\n"\
                         "Options:\n"\
                         "\t-h\t\tthis help message.\n"\
@@ -309,6 +317,7 @@ int main (int argc, char **argv)
                         "\t-w n\t\treverb wet: 0..32767.\n"
                         "\t-n n\t\treverb dry: 0..32767.\n"
                         "\t-c n\t\tchorus preset: 0=no, 1..4=presets.\n"
+                        "\t-l n\t\tchorus level: 0..32767.\n"
                         "\t-v n\t\tmaster volume: 0..100.\n"
                         , argv[0]);
             return EXIT_FAILURE;
@@ -340,6 +349,13 @@ int main (int argc, char **argv)
             chorus_type = atoi(optarg);
             if (chorus_type < 0 || chorus_type > 4) {
                 fprintf (stderr, "invalid chorus preset: %ld\n", chorus_type);
+                return EXIT_FAILURE;
+            }
+            break;
+        case 'l':
+            chorus_level = atoi(optarg);
+            if (chorus_level < 0 || chorus_level > 32767) {
+                fprintf (stderr, "invalid chorus level: %ld\n", chorus_level);
                 return EXIT_FAILURE;
             }
             break;
