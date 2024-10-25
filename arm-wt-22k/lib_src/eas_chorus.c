@@ -85,7 +85,6 @@ static const EAS_I16 EAS_chorusShape[CHORUS_SHAPE_SIZE] = {
 static EAS_RESULT ChorusInit (EAS_DATA_HANDLE pEASData, EAS_VOID_PTR *pInstData)
 {
     S_CHORUS_OBJECT *pChorusData;
-    S_CHORUS_PRESET *pPreset;
     EAS_I32 index;
 
     /* check Configuration Module for data allocation */
@@ -109,29 +108,7 @@ static EAS_RESULT ChorusInit (EAS_DATA_HANDLE pEASData, EAS_VOID_PTR *pInstData)
 
     /* set some default values */
     pChorusData->bypass =       EAS_CHORUS_BYPASS_DEFAULT;
-    pChorusData->preset =       EAS_CHORUS_PRESET_DEFAULT;
-    pChorusData->m_nLevel =     EAS_CHORUS_LEVEL_DEFAULT;
-    pChorusData->m_nRate =      EAS_CHORUS_RATE_DEFAULT;
-    pChorusData->m_nDepth =     EAS_CHORUS_DEPTH_DEFAULT;
-
-    //chorus rate and depth need some massaging from preset value (which is sample rate independent)
-
-    //convert rate from steps of .05 Hz to value which can be used as phase increment,
-    //with current CHORUS_SHAPE_SIZE and rate limits, this fits into 16 bits
-    //want to compute ((shapeSize * 65536) * (storedRate/20))/sampleRate;
-    //computing it as below allows rate steps to be evenly spaced
-    //uses 32 bit divide, but only once when new value is selected
-    pChorusData->m_nRate = (EAS_I16)
-        ((((EAS_I32)CHORUS_SHAPE_SIZE<<16)/(20*(EAS_I32)_OUTPUT_SAMPLE_RATE)) * pChorusData->m_nRate);
-
-    //convert depth from steps of .05 ms, to samples, with 16 bit whole part, discard fraction
-    //want to compute ((depth * sampleRate)/20000)
-    //use the following approximation since 105/32 is roughly 65536/20000
-    /*lint -e{704} use shift for performance */
-    pChorusData->m_nDepth = (EAS_I16)
-        (((((EAS_I32)pChorusData->m_nDepth * _OUTPUT_SAMPLE_RATE)>>5) * 105) >> 16);
-
-    pChorusData->m_nLevel = pChorusData->m_nLevel;
+    pChorusData->m_nNextChorus = EAS_CHORUS_PRESET_DEFAULT;
 
     //zero delay memory for chorus
     for (index = CHORUS_L_SIZE - 1; index >= 0; index--)
@@ -157,18 +134,7 @@ static EAS_RESULT ChorusInit (EAS_DATA_HANDLE pEASData, EAS_VOID_PTR *pInstData)
     pChorusData->chorusTapPosition = (EAS_I16)((CHORUS_DELAY_MS * _OUTPUT_SAMPLE_RATE)/1000);
 
     //now copy from the new preset into Chorus
-    pPreset = &pChorusData->m_sPreset.m_sPreset[pChorusData->m_nNextChorus];
-
-    pChorusData->m_nLevel = pPreset->m_nLevel;
-    pChorusData->m_nRate =  pPreset->m_nRate;
-    pChorusData->m_nDepth = pPreset->m_nDepth;
-
-    pChorusData->m_nRate = (EAS_I16)
-        ((((EAS_I32)CHORUS_SHAPE_SIZE<<16)/(20*(EAS_I32)_OUTPUT_SAMPLE_RATE)) * pChorusData->m_nRate);
-
-    /*lint -e{704} use shift for performance */
-    pChorusData->m_nDepth = (EAS_I16)
-        (((((EAS_I32)pChorusData->m_nDepth * _OUTPUT_SAMPLE_RATE)>>5) * 105) >> 16);
+    ChorusUpdate(pChorusData);
 
     *pInstData = pChorusData;
 
@@ -491,6 +457,7 @@ static EAS_RESULT ChorusSetParam (EAS_VOID_PTR pInstData, EAS_I32 param, EAS_I32
                 value!=EAS_PARAM_CHORUS_PRESET3 && value!=EAS_PARAM_CHORUS_PRESET4)
                 return EAS_ERROR_INVALID_PARAMETER;
             p->m_nNextChorus = (EAS_I8)value;
+            ChorusUpdate(p); // update parameters immediately
             break;
         case EAS_PARAM_CHORUS_RATE:
             if(value<EAS_CHORUS_RATE_MIN || value>EAS_CHORUS_RATE_MAX)
@@ -590,9 +557,19 @@ static EAS_RESULT ChorusUpdate(S_CHORUS_OBJECT *pChorusData)
     pChorusData->m_nRate =  pPreset->m_nRate;
     pChorusData->m_nDepth = pPreset->m_nDepth;
 
+    //chorus rate and depth need some massaging from preset value (which is sample rate independent)
+
+    //convert rate from steps of .05 Hz to value which can be used as phase increment,
+    //with current CHORUS_SHAPE_SIZE and rate limits, this fits into 16 bits
+    //want to compute ((shapeSize * 65536) * (storedRate/20))/sampleRate;
+    //computing it as below allows rate steps to be evenly spaced
+    //uses 32 bit divide, but only once when new value is selected
     pChorusData->m_nRate = (EAS_I16)
         ((((EAS_I32)CHORUS_SHAPE_SIZE<<16)/(20*(EAS_I32)_OUTPUT_SAMPLE_RATE)) * pChorusData->m_nRate);
 
+    //convert depth from steps of .05 ms, to samples, with 16 bit whole part, discard fraction
+    //want to compute ((depth * sampleRate)/20000)
+    //use the following approximation since 105/32 is roughly 65536/20000
     /*lint -e{704} use shift for performance */
     pChorusData->m_nDepth = (EAS_I16)
         (((((EAS_I32)pChorusData->m_nDepth * _OUTPUT_SAMPLE_RATE)>>5) * 105) >> 16);

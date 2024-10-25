@@ -38,9 +38,6 @@
 
 #define EAS_CHORUS_BYPASS_DEFAULT   1
 #define EAS_CHORUS_PRESET_DEFAULT   0
-#define EAS_CHORUS_RATE_DEFAULT     30
-#define EAS_CHORUS_DEPTH_DEFAULT    39
-#define EAS_CHORUS_LEVEL_DEFAULT    32767
 
 #define EAS_CHORUS_LEVEL_MIN        0
 #define EAS_CHORUS_LEVEL_MAX        32767
@@ -91,7 +88,6 @@ typedef struct
     EAS_PCM chorusDelayR[CHORUS_R_SIZE];
 
     EAS_BOOL    bypass;
-    EAS_I8      preset;
 
     EAS_I16     m_nCurrentChorus;           // preset number for current Chorus
     EAS_I16     m_nNextChorus;              // preset number for next Chorus
