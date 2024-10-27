@@ -32,6 +32,7 @@ option(BUILD_SONIVOX_SHARED "Build the shared library" TRUE)
 option(BUILD_EXAMPLE "Build and install the example program" TRUE)
 option(BUILD_TESTING "Build the unit tests" TRUE)
 option(CMAKE_POSITION_INDEPENDENT_CODE "Whether to create position-independent targets" TRUE)
+option(USE_NEW_HOST_WRAPPER "Use the new host wrapper" TRUE)
 set(MAX_VOICES 64 CACHE STRING "Maximum number of voices")
 
 include(CMakeDependentOption)
@@ -67,7 +68,7 @@ endif()
 
 list(APPEND SOURCES
   arm-wt-22k/host_src/eas_config.c
-  arm-wt-22k/host_src/eas_hostmm.c
+#arm-wt-22k/host_src/eas_hostmm.c
 #arm-wt-22k/host_src/eas_main.c
   arm-wt-22k/host_src/eas_report.c
 #arm-wt-22k/host_src/eas_wave.c
@@ -110,6 +111,12 @@ list(APPEND SOURCES
 #arm-wt-22k/lib_src/jet.c
   arm-wt-22k/lib_src/wt_200k_G.c
 )
+
+if (USE_NEW_HOST_WRAPPER)
+    list(APPEND SOURCES arm-wt-22k/src/hostmm_ng.c)
+else()
+    list(APPEND SOURCES arm-wt-22k/host_src/eas_hostmm.c)
+endif()
 
 configure_file(arm-wt-22k/host_src/eas.cmake libsonivox/eas.h @ONLY)
 
